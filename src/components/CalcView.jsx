@@ -52,11 +52,12 @@ export default function CalcView({ user }) {
         notes: visitNotes.trim(),
         entered_by: user.username,
       });
-      await store.pushLog({ user: user.username, action: 'log_visit', detail: `${patientName.trim()} — $${total.toFixed(2)}` });
+      const savedName = patientName.trim();
+      await store.pushLog({ user: user.username, action: 'log_visit', detail: `${savedName} — $${total.toFixed(2)}` });
       setPatientName('');
       setVisitNotes('');
       setShowLogVisit(false);
-      showToast(`Visit logged for ${patientName.trim()}`);
+      showToast(`Visit logged for ${savedName}`);
     } catch (e) { alert('Failed to log visit: ' + e.message); }
     setLogSaving(false);
   };

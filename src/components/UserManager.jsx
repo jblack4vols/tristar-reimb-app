@@ -8,7 +8,7 @@ const BLANK = { id:'', name:'', username:'', password:'', email:'', location:'',
 
 export default function UserManager() {
   const { providers: PROVIDERS_MAP } = useAdminData();
-  const [users, setUsers]     = useState(store.getUsers);
+  const [users, setUsers]     = useState(() => store.getUsers());
   const [form, setForm]       = useState(BLANK);
   const [editing, setEditing] = useState(false);
   const [showForm, setShowForm] = useState(false);

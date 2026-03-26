@@ -217,6 +217,12 @@ export default function RateManager() {
 
   const allCodes = rates ? Object.keys(rates).sort() : [];
 
+  // Build a reverse map: code -> group key
+  const codeToGroup = {};
+  (codeGroups || []).forEach(g => {
+    (g.codes || []).forEach(c => { codeToGroup[c] = g.key; });
+  });
+
   const filteredCodes = allCodes.filter((code) => {
     // search filter
     const label = codeLabels?.[code] || '';
@@ -227,8 +233,7 @@ export default function RateManager() {
     if (!activeGroup) return true;
     if (activeGroup === 'Evals') return ALL_EVALS.includes(code);
 
-    // Check the codeGroups map for a match
-    const group = codeGroups?.[code];
+    const group = codeToGroup[code];
     if (group && group.toLowerCase() === activeGroup.toLowerCase()) return true;
 
     return false;

@@ -17,7 +17,7 @@ const ACTION_COLORS = {
 };
 
 export default function ActivityLog() {
-  const [log, setLog] = useState(store.getLog);
+  const [log, setLog] = useState(() => store.getLog());
 
   const clearLog = async () => {
     if (!confirm('Clear all activity logs? This cannot be undone.')) return;

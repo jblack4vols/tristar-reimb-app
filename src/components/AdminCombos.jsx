@@ -4,7 +4,7 @@ import { useAdminData } from '../utils/useAdminData';
 
 export default function AdminCombos() {
   const { rates: RATES } = useAdminData();
-  const [combos, setCombos] = useState(store.getCombos);
+  const [combos, setCombos] = useState(() => store.getCombos());
   const [search, setSearch] = useState('');
 
   const del = async (id) => {
