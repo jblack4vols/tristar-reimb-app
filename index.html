@@ -27,16 +27,6 @@
         <div style="color:#888;font-size:14px;">Loading Tristar PT Calculator…</div>
       </div>
     </div>
-    <script type="module" src="/src/index.jsx"></script>
-    <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker
-            .register('/tristar-reimb-app/sw.js', { scope: '/tristar-reimb-app/' })
-            .then((reg) => console.log('[App] Service Worker registered, scope:', reg.scope))
-            .catch((err) => console.warn('[App] Service Worker registration failed:', err));
-        });
-      }
-    </script>
+    <script type="module" src="./src/index.jsx"></script>
   </body>
 </html>
