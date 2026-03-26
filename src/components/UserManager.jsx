@@ -7,9 +7,10 @@ import { useAdminData } from '../utils/useAdminData';
 const BLANK = { id:'', name:'', username:'', password:'', email:'', location:'', role:'staff', active:true };
 
 export default function UserManager() {
-  const { providers: PROVIDERS_MAP } = useAdminData();
+  const { providers: PROVIDERS_MAP, allProviders } = useAdminData();
   const [users, setUsers]     = useState(() => store.getUsers());
   const [form, setForm]       = useState(BLANK);
+  const [bulkLoading, setBulkLoading] = useState(false);
   const [editing, setEditing] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [search, setSearch]   = useState('');
@@ -77,6 +78,40 @@ export default function UserManager() {
 
   const reset = () => { setForm(BLANK); setEditing(false); setShowForm(false); };
 
+  const bulkCreateFromProviders = async () => {
+    const existingUsernames = users.map(u => u.username.toLowerCase());
+    const newUsers = [];
+    for (const prov of (allProviders || [])) {
+      // Generate email-style username: firstname.lastname@tristarpt.com
+      const parts = prov.name.replace(/\s*\(OT\)\s*/i, '').replace(/\s*\(COTA\)\s*/i, '').replace(/\s*\(PTA\)\s*/i, '').trim().split(/\s+/);
+      const first = (parts[0] || '').toLowerCase();
+      const last = (parts[parts.length - 1] || '').toLowerCase();
+      const email = `${first}.${last}@tristarpt.com`;
+      if (existingUsernames.includes(email)) continue; // skip existing
+      newUsers.push({
+        id: `u_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+        name: prov.name,
+        username: email,
+        password: 'Tristar2026',
+        email,
+        location: prov.location || '',
+        role: 'staff',
+        active: true,
+      });
+    }
+    if (newUsers.length === 0) { alert('All providers already have accounts.'); return; }
+    if (!confirm(`Create ${newUsers.length} new user account(s) from providers?\n\nUsername: email (e.g., julia.bentley@tristarpt.com)\nPassword: Tristar2026`)) return;
+    setBulkLoading(true);
+    try {
+      const updated = [...users, ...newUsers];
+      await store.setUsers(updated);
+      await store.pushLog({ user: 'jordan', action: 'bulk_create_users', detail: `Created ${newUsers.length} accounts from providers` });
+      setUsers(updated);
+      alert(`${newUsers.length} accounts created successfully!`);
+    } catch (e) { alert('Failed: ' + e.message); }
+    setBulkLoading(false);
+  };
+
   const filtered = users.filter(u =>
     !search || [u.name, u.username, u.location || ''].join(' ').toLowerCase().includes(search.toLowerCase())
   );
@@ -87,7 +122,12 @@ export default function UserManager() {
         <div className="section-head">
           Users <span style={{ fontSize: 14, fontWeight: 500, color: '#6b7280' }}>({users.length})</span>
         </div>
-        <button className="btn btn-primary btn-sm" onClick={() => { reset(); setShowForm(true); }}>+ Add User</button>
+        <div style={{ display: 'flex', gap: 6 }}>
+          <button className="btn btn-primary btn-sm" onClick={() => { reset(); setShowForm(true); }}>+ Add User</button>
+          <button className="btn btn-ghost btn-sm" onClick={bulkCreateFromProviders} disabled={bulkLoading}>
+            {bulkLoading ? 'Creating…' : 'Create from Providers'}
+          </button>
+        </div>
       </div>
 
       {showForm && (
