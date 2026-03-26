@@ -45,12 +45,25 @@ export default function App() {
 
   useEffect(() => {
     // Load all data from Supabase in parallel with MSAL init
-    Promise.all([
-      loadStore().catch(err => console.error('Store load error:', err)),
-      loadAllData().catch(err => console.error('Data load error:', err)),
-      initMsal().catch(err => { console.error('MSAL init error:', err); return null; }),
-    ]).then(([, , account]) => {
+    // Timeout after 8s so the app doesn't hang forever
+    const timeout = new Promise(resolve => setTimeout(() => resolve('timeout'), 8000));
+
+    const msalPromise = initMsal().catch(err => { console.error('MSAL init error:', err); return null; });
+    const storePromise = loadStore().catch(err => console.error('Store load error:', err));
+    const dataPromise = loadAllData().catch(err => console.error('Data load error:', err));
+
+    Promise.race([
+      Promise.all([storePromise, dataPromise, msalPromise]),
+      timeout,
+    ]).then((result) => {
       setReady(true);
+      if (result === 'timeout') {
+        console.warn('App init timed out — loading with cached/default data');
+        const sess = store.getSession();
+        if (sess) setCurrentUser(sess);
+        return;
+      }
+      const [, , account] = result;
       if (account) {
         const msUser = resolveMsUser(account);
         store.setSession(msUser);
