@@ -61,7 +61,7 @@ export default function NewVisitFlow({ user }) {
         .order('created_at', { ascending: false });
       const decrypted = (data || []).map(p => ({
         ...p,
-        name: decryptPHI(p.name),
+        name: decryptPHI(p.encrypted_name),
         notes: p.notes ? decryptPHI(p.notes) : '',
       }));
       setPatients(decrypted);
@@ -152,10 +152,9 @@ export default function NewVisitFlow({ user }) {
   const handleAddNewPatient = async () => {
     if (!newPatient.name.trim()) return;
     const payload = {
-      name: encryptPHI(newPatient.name.trim()),
+      encrypted_name: encryptPHI(newPatient.name.trim()),
       payer: newPatient.payer,
       diagnosis: newPatient.diagnosis,
-      created_by: user?.username || 'unknown',
     };
     const { data, error } = await supabase.from('patients').insert(payload).select().single();
     if (error) {

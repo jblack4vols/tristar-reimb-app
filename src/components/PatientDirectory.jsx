@@ -42,9 +42,9 @@ export default function PatientDirectory({ user, onSelectPatient }) {
 
     const decrypted = (data || []).map(p => ({
       ...p,
-      name: decryptPHI(p.name),
+      name: decryptPHI(p.encrypted_name),
       notes: p.notes ? decryptPHI(p.notes) : '',
-      _encryptedName: p.name, // keep original for billing match
+      _encryptedName: p.encrypted_name, // keep original for billing match
     }));
 
     setPatients(decrypted);
@@ -145,7 +145,7 @@ export default function PatientDirectory({ user, onSelectPatient }) {
     setSaving(true);
 
     const payload = {
-      name: encryptPHI(form.name.trim()),
+      encrypted_name: encryptPHI(form.name.trim()),
       payer: form.payer,
       provider: form.provider,
       location: form.location,

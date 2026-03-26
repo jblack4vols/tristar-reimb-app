@@ -61,7 +61,7 @@ export default function BatchVisitEntry({ user }) {
         .order('created_at', { ascending: false });
       const decrypted = (data || []).map(p => ({
         ...p,
-        name: decryptPHI(p.name),
+        name: decryptPHI(p.encrypted_name),
         notes: p.notes ? decryptPHI(p.notes) : '',
       }));
       setPatients(decrypted);

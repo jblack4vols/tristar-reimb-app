@@ -83,7 +83,7 @@ export default function GlobalSearch({ isOpen, onClose, onNavigate }) {
 
       if (data) {
         for (const p of data) {
-          const decrypted = decryptPHI(p.name);
+          const decrypted = decryptPHI(p.encrypted_name);
           if (decrypted.toLowerCase().includes(term)) {
             matchedPatients.push({ id: p.id, name: decrypted });
             if (matchedPatients.length >= MAX_PER_CATEGORY) break;

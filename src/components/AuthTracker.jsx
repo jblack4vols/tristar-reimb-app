@@ -54,12 +54,12 @@ export default function AuthTracker({ user }) {
   const fetchPatients = async () => {
     const { data, error } = await supabase
       .from('patients')
-      .select('id, patient_name')
-      .order('patient_name');
+      .select('id, encrypted_name')
+      .order('encrypted_name');
     if (error) { console.error('Patients fetch error:', error); return; }
     const decrypted = (data || []).map(p => ({
       ...p,
-      patient_name: decryptPHI(p.patient_name),
+      patient_name: decryptPHI(p.encrypted_name),
     }));
     setPatients(decrypted);
   };
@@ -69,12 +69,12 @@ export default function AuthTracker({ user }) {
     setLoading(true);
     const { data, error } = await supabase
       .from('authorizations')
-      .select('*, patients(patient_name)')
+      .select('*, patients(encrypted_name)')
       .order('end_date', { ascending: true });
     if (error) { console.error('Auth fetch error:', error); setLoading(false); return; }
 
     const rows = (data || []).map(a => {
-      const rawName = a.patients?.patient_name || '';
+      const rawName = a.patients?.encrypted_name || '';
       const status = deriveStatus(a);
       return { ...a, _patientName: decryptPHI(rawName), _status: status };
     });
