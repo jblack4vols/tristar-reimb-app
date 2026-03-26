@@ -561,6 +561,116 @@ input:focus, select:focus { border-color: var(--orange); }
 .admin-list-item .item-name { font-weight: 700; font-size: 14px; }
 .admin-list-item .item-meta { font-size: 13px; color: #6b7280; }
 
+/* ── Grouped Navigation ── */
+.grouped-nav {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.nav-group {
+  position: relative;
+}
+.nav-group-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 20px;
+  border: 2px solid #e5e7eb;
+  background: transparent;
+  color: #6b7280;
+  cursor: pointer;
+  font-family: var(--font);
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+  transition: all 0.15s;
+}
+.nav-group-btn:hover { border-color: #d1d5db; background: #f9fafb; }
+.nav-group-btn.active { border-color: var(--orange); background: var(--orange-light); color: var(--orange); }
+.nav-group-icon { font-size: 15px; }
+.nav-group-label { }
+.nav-group-arrow { font-size: 8px; opacity: 0.5; }
+.nav-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  min-width: 180px;
+  background: #fff;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 6px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  z-index: 100;
+}
+.nav-dropdown-item {
+  display: block;
+  width: 100%;
+  padding: 10px 14px;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: left;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: #1a1a1a;
+  cursor: pointer;
+  font-family: var(--font);
+  transition: background 0.1s;
+}
+.nav-dropdown-item:hover { background: #f3f4f6; }
+.nav-dropdown-item.active { background: var(--orange-light); color: var(--orange); font-weight: 700; }
+
+/* Action cards for home page */
+.action-card {
+  padding: 24px 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: transform 0.1s, box-shadow 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.action-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+.action-card:active { transform: scale(0.98); }
+.action-card-primary { background: var(--orange); color: #fff; border-color: var(--orange); }
+.action-card-primary .action-card-desc { color: rgba(255,255,255,0.75); }
+
+/* Success animation */
+@keyframes successPop {
+  0% { transform: scale(0.8); opacity: 0; }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); opacity: 1; }
+}
+.success-pop { animation: successPop 0.4s ease-out; }
+
+/* Step headers for New Visit flow */
+.step-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  margin-top: 20px;
+}
+.step-number {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--orange);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.step-label {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
 /* ── Dark mode ── */
 [data-theme="dark"] {
   --bg: #1a1a1a;
@@ -698,6 +808,13 @@ input:focus, select:focus { border-color: var(--orange); }
   background: #3a3520;
 }
 
+[data-theme="dark"] .nav-dropdown { background: #2a2a2a; border-color: #444; box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+[data-theme="dark"] .nav-dropdown-item { color: #e5e5e5; }
+[data-theme="dark"] .nav-dropdown-item:hover { background: #333; }
+[data-theme="dark"] .nav-group-btn:hover { background: #333; border-color: #555; }
+[data-theme="dark"] .step-label { color: #e5e5e5; }
+[data-theme="dark"] .action-card { border-color: #444; }
+
 /* ── Responsive ── */
 
 /* Large desktop */
@@ -740,6 +857,13 @@ input:focus, select:focus { border-color: var(--orange); }
   .rate-table th, .rate-table td { padding: 6px 8px; font-size: 12px; }
   .btn          { padding: 10px 16px; font-size: 14px; }
   .btn-sm       { padding: 7px 12px; font-size: 12px; }
+  .grouped-nav { gap: 3px; }
+  .nav-group-btn { padding: 6px 10px; font-size: 12px; }
+  .nav-group-label { display: none; }
+  .nav-group-icon { font-size: 18px; }
+  .nav-group-arrow { display: none; }
+  .nav-dropdown { min-width: 160px; }
+  .action-card { padding: 16px 12px; }
   .group-pill   { padding: 6px 10px; font-size: 12px; }
   .mode-btn     { padding: 8px 6px; font-size: 13px; }
   .card         { padding: 14px; }

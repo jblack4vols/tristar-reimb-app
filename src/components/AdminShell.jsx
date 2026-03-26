@@ -1,5 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Header from './Header';
+import GroupedNav from './GroupedNav';
+import HomePage from './HomePage';
+import NewVisitFlow from './NewVisitFlow';
 import CalcView from './CalcView';
 import UserManager from './UserManager';
 import AdminCombos from './AdminCombos';
@@ -19,62 +22,38 @@ import VisitHistory from './VisitHistory';
 import PatientDirectory from './PatientDirectory';
 import AuthTracker from './AuthTracker';
 import TreatmentTemplates from './TreatmentTemplates';
-
-const ALL = ['superadmin', 'admin'];
-
-const TABS = [
-  { k: 'dashboard',    label: 'Dashboard',       roles: ALL },
-  { k: 'calc',         label: 'Calculator',      roles: ALL },
-  { k: 'patients',     label: 'Patients',        roles: ALL },
-  { k: 'auths',        label: 'Authorizations',  roles: ALL },
-  { k: 'templates',    label: 'Templates',       roles: ALL },
-  { k: 'visits',       label: 'Visit History',   roles: ALL },
-  { k: 'productivity', label: 'Productivity',    roles: ALL },
-  { k: 'rates',        label: 'Rates',           roles: ALL },
-  { k: 'ratehistory',  label: 'Rate History',    roles: ALL },
-  { k: 'payers',       label: 'Payers',          roles: ALL },
-  { k: 'comparison',   label: 'Payer Compare',   roles: ALL },
-  { k: 'providers',    label: 'Providers',       roles: ALL },
-  { k: 'rules',        label: 'Rules',           roles: ALL },
-  { k: 'report',       label: 'Monthly Report',  roles: ALL },
-  { k: 'yoy',          label: 'Year over Year',  roles: ALL },
-  { k: 'data',         label: 'Import/Export',   roles: ALL },
-  { k: 'users',        label: 'Users',           roles: ALL },
-  { k: 'combos',       label: 'Combos',          roles: ALL },
-  { k: 'log',          label: 'Activity Log',    roles: ALL },
-];
+import { supabase } from '../utils/supabase';
+import { decryptPHI } from '../utils/crypto';
 
 export default function AdminShell({ user, onLogout }) {
-  const visibleTabs = TABS.filter(t => t.roles.includes(user.role));
-  const [tab, setTab] = useState('dashboard');
+  const [tab, setTab] = useState('home');
   const badge = user.role === 'superadmin' ? 'Super Admin' : 'Admin';
 
-  // When a template is applied, switch to Calculator tab and set codes
   const [templateCodes, setTemplateCodes] = useState(null);
   const applyTemplate = (codes) => { setTemplateCodes(codes); setTab('calc'); };
 
-  // When a patient is selected from directory, switch to Calculator tab
   const [selectedPatient, setSelectedPatient] = useState('');
   const selectPatient = (name) => { setSelectedPatient(name); setTab('calc'); };
+
+  // Recent patients for home page
+  const [recentPatients, setRecentPatients] = useState([]);
+  useEffect(() => {
+    supabase.from('billing_entries').select('patient_name').order('created_at', { ascending: false }).limit(20)
+      .then(({ data }) => {
+        const names = [...new Set((data || []).map(e => decryptPHI(e.patient_name)).filter(Boolean))].slice(0, 5);
+        setRecentPatients(names);
+      });
+  }, [tab]);
 
   return (
     <div className="app-wrap">
       <Header user={user} onLogout={onLogout} badge={badge} />
+      <GroupedNav activeTab={tab} onTabChange={setTab} isAdmin={true} />
 
-      <nav className="nav-tabs">
-        {visibleTabs.map(t => (
-          <button
-            key={t.k}
-            className={`nav-tab${tab === t.k ? ' active' : ''}`}
-            onClick={() => setTab(t.k)}
-          >
-            {t.label}
-          </button>
-        ))}
-      </nav>
-
+      {tab === 'home'         && <HomePage user={user} onNavigate={setTab} recentPatients={recentPatients} />}
       {tab === 'dashboard'    && <Dashboard />}
       {tab === 'calc'         && <CalcView user={user} templateCodes={templateCodes} selectedPatient={selectedPatient} onClearTemplate={() => setTemplateCodes(null)} onClearPatient={() => setSelectedPatient('')} />}
+      {tab === 'newvisit'     && <NewVisitFlow user={user} />}
       {tab === 'patients'     && <PatientDirectory user={user} onSelectPatient={selectPatient} />}
       {tab === 'auths'        && <AuthTracker user={user} />}
       {tab === 'templates'    && <TreatmentTemplates user={user} onApplyTemplate={applyTemplate} />}
