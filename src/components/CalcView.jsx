@@ -2,6 +2,7 @@ import { useState, useMemo, useRef } from 'react';
 import { useAdminData } from '../utils/useAdminData';
 import { PT_EVALS as DEFAULT_PT_EVALS, OT_EVALS as DEFAULT_OT_EVALS } from '../data/codes';
 import { store } from '../utils/store';
+import { supabase } from '../utils/supabase';
 import PdfExport from './PdfExport';
 
 export default function CalcView({ user }) {
@@ -23,12 +24,41 @@ export default function CalcView({ user }) {
   const [toast, setToast]             = useState('');
   const [projVisits, setProjVisits]   = useState(1);
   const [visitsPerWeek, setVisitsPerWeek] = useState(0);
+  const [showLogVisit, setShowLogVisit] = useState(false);
+  const [patientName, setPatientName]   = useState('');
+  const [visitNotes, setVisitNotes]     = useState('');
+  const [logSaving, setLogSaving]       = useState(false);
   const toastTimer = useRef(null);
 
   const showToast = msg => {
     setToast(msg);
     clearTimeout(toastTimer.current);
     toastTimer.current = setTimeout(() => setToast(''), 2800);
+  };
+
+  const logVisit = async () => {
+    if (!patientName.trim()) { alert('Patient name is required.'); return; }
+    setLogSaving(true);
+    try {
+      const pInfo = ALL_PROVIDERS.find(p => p.name === provider) || null;
+      await supabase.from('billing_entries').insert({
+        patient_name: patientName.trim(),
+        codes: [...codes],
+        payer: mode === 'fee' ? payer : cPayer,
+        provider: provider || '',
+        location: pInfo?.location || user.location || '',
+        total,
+        visit_date: new Date().toISOString().split('T')[0],
+        notes: visitNotes.trim(),
+        entered_by: user.username,
+      });
+      await store.pushLog({ user: user.username, action: 'log_visit', detail: `${patientName.trim()} — $${total.toFixed(2)}` });
+      setPatientName('');
+      setVisitNotes('');
+      setShowLogVisit(false);
+      showToast(`Visit logged for ${patientName.trim()}`);
+    } catch (e) { alert('Failed to log visit: ' + e.message); }
+    setLogSaving(false);
   };
 
   const pInfo  = useMemo(() => ALL_PROVIDERS.find(p => p.name === provider) || null, [provider]);
@@ -230,12 +260,15 @@ export default function CalcView({ user }) {
             })}
           </div>
 
-          {/* Save combo */}
+          {/* Save combo + Log Visit */}
           {codes.length > 0 && (
             <div style={{ marginBottom: 14 }}>
-              {!showSave
-                ? <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                    <button className="btn btn-ghost btn-sm" onClick={() => setShowSave(true)}>★ Save this combo</button>
+              {!showSave && !showLogVisit
+                ? <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                    <button className="btn btn-ghost btn-sm" onClick={() => setShowSave(true)}>★ Save Combo</button>
+                    {(payer || cPayer) && total > 0 && (
+                      <button className="btn btn-primary btn-sm" onClick={() => setShowLogVisit(true)}>Log Visit</button>
+                    )}
                     {payer && (
                       <PdfExport
                         codes={codes}
@@ -247,7 +280,8 @@ export default function CalcView({ user }) {
                       />
                     )}
                   </div>
-                : <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                : showSave
+                ? <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
                     <input
                       autoFocus
                       placeholder="Name this combo…"
@@ -258,6 +292,39 @@ export default function CalcView({ user }) {
                     />
                     <button className="btn btn-primary btn-sm" onClick={saveCombo}>Save</button>
                     <button className="btn btn-muted btn-sm" onClick={() => setShowSave(false)}>Cancel</button>
+                  </div>
+                : <div className="card" style={{ borderColor: '#FF8200', borderWidth: 2 }}>
+                    <div style={{ fontWeight: 700, fontSize: 15, color: '#FF8200', marginBottom: 12 }}>Log Patient Visit</div>
+                    <div className="grid-2" style={{ marginBottom: 10 }}>
+                      <div>
+                        <label className="field-label">Patient Name *</label>
+                        <input
+                          autoFocus
+                          placeholder="John Doe"
+                          value={patientName}
+                          onChange={e => setPatientName(e.target.value)}
+                          onKeyDown={e => e.key === 'Enter' && logVisit()}
+                        />
+                      </div>
+                      <div>
+                        <label className="field-label">Notes (optional)</label>
+                        <input
+                          placeholder="Initial eval, follow-up, etc."
+                          value={visitNotes}
+                          onChange={e => setVisitNotes(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                    <div style={{ fontSize: 13, color: '#6b7280', marginBottom: 12 }}>
+                      <strong>{mode === 'fee' ? payer : cPayer}</strong> · {codes.length} code{codes.length !== 1 ? 's' : ''} · <strong style={{ color: '#FF8200' }}>${total.toFixed(2)}</strong>
+                      {provider && <span> · {provider}</span>}
+                    </div>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <button className="btn btn-primary btn-sm" onClick={logVisit} disabled={logSaving}>
+                        {logSaving ? 'Saving…' : 'Log Visit'}
+                      </button>
+                      <button className="btn btn-muted btn-sm" onClick={() => setShowLogVisit(false)}>Cancel</button>
+                    </div>
                   </div>
               }
             </div>

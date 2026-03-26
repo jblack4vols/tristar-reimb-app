@@ -2,9 +2,11 @@ import { useState } from 'react';
 import Header from './Header';
 import CalcView from './CalcView';
 import UserCombos from './UserCombos';
+import VisitHistory from './VisitHistory';
 
 const TABS = [
   { k: 'calc',   label: 'Calculator' },
+  { k: 'visits', label: 'My Visits' },
   { k: 'combos', label: 'My Combos' },
 ];
 
@@ -28,6 +30,7 @@ export default function UserShell({ user, onLogout }) {
       </nav>
 
       {tab === 'calc'   && <CalcView user={user} />}
+      {tab === 'visits' && <VisitHistory user={user} />}
       {tab === 'combos' && <UserCombos user={user} />}
     </div>
   );

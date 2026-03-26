@@ -11,19 +11,21 @@ import BillingRulesEditor from './admin/BillingRulesEditor';
 import DataExportImport from './admin/DataExportImport';
 import RateHistory from './admin/RateHistory';
 import Dashboard from './admin/Dashboard';
+import VisitHistory from './VisitHistory';
 
 const TABS = [
-  { k: 'dashboard',   label: 'Dashboard',     roles: ['superadmin', 'admin'] },
-  { k: 'calc',        label: 'Calculator',    roles: ['superadmin', 'admin'] },
-  { k: 'rates',       label: 'Rates',         roles: ['superadmin', 'admin'] },
-  { k: 'ratehistory', label: 'Rate History',   roles: ['superadmin', 'admin'] },
-  { k: 'payers',      label: 'Payers',        roles: ['superadmin'] },
-  { k: 'providers',   label: 'Providers',     roles: ['superadmin'] },
-  { k: 'rules',       label: 'Rules',         roles: ['superadmin'] },
-  { k: 'data',        label: 'Import/Export', roles: ['superadmin'] },
-  { k: 'users',       label: 'Users',         roles: ['superadmin'] },
-  { k: 'combos',      label: 'Combos',        roles: ['superadmin', 'admin'] },
-  { k: 'log',         label: 'Activity Log',  roles: ['superadmin', 'admin'] },
+  { k: 'dashboard',   label: 'Dashboard',      roles: ['superadmin', 'admin'] },
+  { k: 'calc',        label: 'Calculator',     roles: ['superadmin', 'admin'] },
+  { k: 'visits',      label: 'Visit History',  roles: ['superadmin', 'admin'] },
+  { k: 'rates',       label: 'Rates',          roles: ['superadmin', 'admin'] },
+  { k: 'ratehistory', label: 'Rate History',    roles: ['superadmin', 'admin'] },
+  { k: 'payers',      label: 'Payers',         roles: ['superadmin'] },
+  { k: 'providers',   label: 'Providers',      roles: ['superadmin'] },
+  { k: 'rules',       label: 'Rules',          roles: ['superadmin'] },
+  { k: 'data',        label: 'Import/Export',  roles: ['superadmin'] },
+  { k: 'users',       label: 'Users',          roles: ['superadmin'] },
+  { k: 'combos',      label: 'Combos',         roles: ['superadmin', 'admin'] },
+  { k: 'log',         label: 'Activity Log',   roles: ['superadmin', 'admin'] },
 ];
 
 export default function AdminShell({ user, onLogout }) {
@@ -49,6 +51,7 @@ export default function AdminShell({ user, onLogout }) {
 
       {tab === 'dashboard' && <Dashboard />}
       {tab === 'calc'      && <CalcView user={user} />}
+      {tab === 'visits'    && <VisitHistory user={user} adminView={true} />}
       {tab === 'rates'     && <RateManager />}
       {tab === 'ratehistory' && <RateHistory />}
       {tab === 'payers'    && <PayerManager />}
