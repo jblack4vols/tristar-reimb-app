@@ -29,6 +29,7 @@ import PatientDirectory from './PatientDirectory';
 import AuthTracker from './AuthTracker';
 import TreatmentTemplates from './TreatmentTemplates';
 import QuickStartGuide from './QuickStartGuide';
+import DevGuide from './admin/DevGuide';
 import { supabase } from '../utils/supabase';
 import { decryptPHI } from '../utils/crypto';
 
@@ -115,6 +116,7 @@ export default function AdminShell({ user, onLogout }) {
             {tab === 'combos'       && <AdminCombos user={user} />}
             {tab === 'log'          && <ActivityLog user={user} />}
             {tab === 'feedback'     && <FeatureRequests user={user} isAdmin={true} />}
+            {tab === 'devguide'    && <DevGuide user={user} />}
           </div>
         </div>
         <MobileBottomBar activeTab={tab} onTabChange={setTab} isAdmin={true} onSearchClick={() => setSearchOpen(true)} />
