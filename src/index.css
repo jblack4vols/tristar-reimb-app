@@ -562,9 +562,158 @@ input:focus, select:focus { border-color: var(--orange); }
 .admin-list-item .item-name { font-weight: 700; font-size: 14px; }
 .admin-list-item .item-meta { font-size: 13px; color: #6b7280; }
 
+/* ── Sidebar Layout ── */
+.app-layout {
+  display: flex;
+  min-height: 100vh;
+}
+.sidebar {
+  width: 240px;
+  background: #fff;
+  border-right: 1.5px solid #e5e7eb;
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  overflow-y: auto;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+.sidebar::-webkit-scrollbar { width: 4px; }
+.sidebar::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 4px; }
+.app-main {
+  flex: 1;
+  margin-left: 240px;
+  min-height: 100vh;
+}
+.app-main .app-wrap {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 16px 24px 60px;
+}
+
+/* Sidebar logo */
+.sidebar-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 16px 12px;
+  border-bottom: 1.5px solid #f3f4f6;
+  margin-bottom: 8px;
+}
+.sidebar-logo-img { width: 36px; height: 36px; object-fit: contain; border-radius: 6px; }
+.sidebar-logo-title { font-size: 14px; font-weight: 700; color: #1a1a1a; line-height: 1.2; }
+.sidebar-logo-sub { font-size: 11px; color: #9ca3af; font-weight: 500; }
+
+/* Sidebar search */
+.sidebar-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 12px 8px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1.5px solid #e5e7eb;
+  background: #f9fafb;
+  color: #9ca3af;
+  font-size: 13px;
+  font-family: var(--font);
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.sidebar-search:hover { border-color: #d1d5db; }
+.sidebar-search-text { flex: 1; text-align: left; }
+.sidebar-search-kbd { font-size: 11px; background: #e5e7eb; padding: 1px 6px; border-radius: 4px; font-weight: 600; }
+
+/* Sidebar nav */
+.sidebar-nav { flex: 1; padding: 0 8px 16px; }
+.sidebar-group { margin-bottom: 2px; }
+.sidebar-group-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  border: none;
+  background: transparent;
+  color: #6b7280;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--font);
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background 0.1s;
+  -webkit-tap-highlight-color: transparent;
+}
+.sidebar-group-btn:hover { background: #f3f4f6; }
+.sidebar-group-btn.active { color: #1a1a1a; }
+.sidebar-group-icon { font-size: 16px; width: 22px; text-align: center; }
+.sidebar-group-label { flex: 1; text-align: left; }
+.sidebar-group-chevron {
+  font-size: 14px; color: #9ca3af; transition: transform 0.15s; font-weight: 700;
+}
+.sidebar-group-chevron.open { transform: rotate(90deg); }
+
+.sidebar-group-items { padding: 2px 0 4px; }
+.sidebar-item {
+  display: block;
+  width: 100%;
+  padding: 7px 10px 7px 38px;
+  border: none;
+  background: transparent;
+  color: #6b7280;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: var(--font);
+  cursor: pointer;
+  border-radius: 6px;
+  text-align: left;
+  transition: all 0.1s;
+  -webkit-tap-highlight-color: transparent;
+}
+.sidebar-item:hover { background: #f3f4f6; color: #1a1a1a; }
+.sidebar-item.active {
+  background: var(--orange-light);
+  color: var(--orange);
+  font-weight: 700;
+}
+
+/* Mobile bottom bar */
+.mobile-bottom-bar {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #fff;
+  border-top: 1.5px solid #e5e7eb;
+  padding: 6px 0 env(safe-area-inset-bottom, 6px);
+  z-index: 100;
+  justify-content: space-around;
+}
+.mobile-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 8px;
+  border: none;
+  background: transparent;
+  color: #9ca3af;
+  font-family: var(--font);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.mobile-tab.active { color: var(--orange); }
+.mobile-tab-icon { font-size: 20px; }
+.mobile-tab-label { font-size: 10px; font-weight: 600; }
+
 /* ── Grouped Navigation ── */
 .grouped-nav {
-  display: flex;
+  display: none; /* hidden on desktop — sidebar is used instead */
   gap: 4px;
   margin-bottom: 16px;
   flex-wrap: wrap;
@@ -673,6 +822,21 @@ input:focus, select:focus { border-color: var(--orange); }
 }
 
 /* ── Dark mode ── */
+/* Sidebar dark */
+[data-theme="dark"] .sidebar { background: #1a1a1a; border-color: #333; }
+[data-theme="dark"] .sidebar-logo { border-color: #333; }
+[data-theme="dark"] .sidebar-logo-title { color: #e5e5e5; }
+[data-theme="dark"] .sidebar-search { background: #2a2a2a; border-color: #444; color: #9ca3af; }
+[data-theme="dark"] .sidebar-search:hover { border-color: #555; }
+[data-theme="dark"] .sidebar-search-kbd { background: #444; color: #9ca3af; }
+[data-theme="dark"] .sidebar-group-btn { color: #9ca3af; }
+[data-theme="dark"] .sidebar-group-btn:hover { background: #2a2a2a; }
+[data-theme="dark"] .sidebar-group-btn.active { color: #e5e5e5; }
+[data-theme="dark"] .sidebar-item { color: #9ca3af; }
+[data-theme="dark"] .sidebar-item:hover { background: #2a2a2a; color: #e5e5e5; }
+[data-theme="dark"] .mobile-bottom-bar { background: #1a1a1a; border-color: #333; }
+[data-theme="dark"] .mobile-tab { color: #6b7280; }
+[data-theme="dark"] .sidebar::-webkit-scrollbar-thumb { background: #444; }
 [data-theme="dark"] {
   --bg: #1a1a1a;
   --bg-card: #2a2a2a;
@@ -832,12 +996,17 @@ input:focus, select:focus { border-color: var(--orange); }
 
 /* Tablet */
 @media (max-width: 768px) {
-  .app-wrap     { max-width: 100%; padding: 14px 14px 100px; }
-  .grid-3       { grid-template-columns: 1fr 1fr; }
-  .code-grid    { max-height: 320px; }
+  .sidebar       { display: none; }
+  .app-main      { margin-left: 0; }
+  .mobile-bottom-bar { display: flex; }
+  .app-wrap      { max-width: 100%; padding: 14px 14px 80px; }
+  .app-main .app-wrap { padding: 14px 14px 80px; }
+  .grid-3        { grid-template-columns: 1fr 1fr; }
+  .code-grid     { max-height: 320px; }
   .rate-table-wrap { max-height: 500px; }
-  .total-amount { font-size: 34px; }
-  .app-header   { flex-wrap: wrap; gap: 8px; }
+  .total-amount  { font-size: 34px; }
+  .app-header    { flex-wrap: wrap; gap: 8px; }
+  .grouped-nav   { display: flex; } /* show grouped nav on mobile as fallback */
 }
 
 /* Mobile */

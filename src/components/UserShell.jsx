@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Header from './Header';
 import GroupedNav from './GroupedNav';
+import Sidebar, { MobileBottomBar } from './Sidebar';
 import GlobalSearch from './GlobalSearch';
 import FeatureRequests from './FeatureRequests';
 import OnboardingTour from './OnboardingTour';
@@ -35,7 +36,6 @@ export default function UserShell({ user, onLogout }) {
       });
   }, [tab]);
 
-  // Keyboard shortcuts
   const handleKeyboard = useCallback((e) => {
     if ((e.ctrlKey || e.metaKey) && e.key === 'k') { e.preventDefault(); setSearchOpen(true); }
     if ((e.ctrlKey || e.metaKey) && e.key === 'n') { e.preventDefault(); setTab('newvisit'); }
@@ -51,7 +51,7 @@ export default function UserShell({ user, onLogout }) {
   const searchNavigate = (tabKey) => { setTab(tabKey); setSearchOpen(false); };
 
   return (
-    <div className="app-wrap">
+    <>
       {showOnboarding && (
         <OnboardingTour
           onComplete={() => setShowOnboarding(false)}
@@ -60,19 +60,27 @@ export default function UserShell({ user, onLogout }) {
       )}
       <GlobalSearch isOpen={searchOpen} onClose={() => setSearchOpen(false)} onNavigate={searchNavigate} />
 
-      <Header user={user} onLogout={onLogout} badge={user.location || 'Staff'} onSearchClick={() => setSearchOpen(true)} />
-      <GroupedNav activeTab={tab} onTabChange={setTab} isAdmin={false} />
+      <div className="app-layout">
+        <Sidebar activeTab={tab} onTabChange={setTab} isAdmin={false} onSearchClick={() => setSearchOpen(true)} />
+        <div className="app-main">
+          <div className="app-wrap">
+            <Header user={user} onLogout={onLogout} badge={user.location || 'Staff'} onSearchClick={() => setSearchOpen(true)} />
+            <GroupedNav activeTab={tab} onTabChange={setTab} isAdmin={false} />
 
-      {tab === 'home'      && <HomePage user={user} onNavigate={setTab} recentPatients={recentPatients} />}
-      {tab === 'calc'      && <CalcView user={user} templateCodes={templateCodes} selectedPatient={selectedPatient} onClearTemplate={() => setTemplateCodes(null)} onClearPatient={() => setSelectedPatient('')} />}
-      {tab === 'newvisit'  && <NewVisitFlow user={user} />}
-      {tab === 'batch'     && <BatchVisitEntry user={user} />}
-      {tab === 'patients'  && <PatientDirectory user={user} onSelectPatient={selectPatient} />}
-      {tab === 'auths'     && <AuthTracker user={user} />}
-      {tab === 'templates' && <TreatmentTemplates user={user} onApplyTemplate={applyTemplate} />}
-      {tab === 'visits'    && <VisitHistory user={user} />}
-      {tab === 'combos'    && <UserCombos user={user} />}
-      {tab === 'feedback'  && <FeatureRequests user={user} />}
-    </div>
+            {tab === 'home'      && <HomePage user={user} onNavigate={setTab} recentPatients={recentPatients} />}
+            {tab === 'calc'      && <CalcView user={user} templateCodes={templateCodes} selectedPatient={selectedPatient} onClearTemplate={() => setTemplateCodes(null)} onClearPatient={() => setSelectedPatient('')} />}
+            {tab === 'newvisit'  && <NewVisitFlow user={user} />}
+            {tab === 'batch'     && <BatchVisitEntry user={user} />}
+            {tab === 'patients'  && <PatientDirectory user={user} onSelectPatient={selectPatient} />}
+            {tab === 'auths'     && <AuthTracker user={user} />}
+            {tab === 'templates' && <TreatmentTemplates user={user} onApplyTemplate={applyTemplate} />}
+            {tab === 'visits'    && <VisitHistory user={user} />}
+            {tab === 'combos'    && <UserCombos user={user} />}
+            {tab === 'feedback'  && <FeatureRequests user={user} />}
+          </div>
+        </div>
+        <MobileBottomBar activeTab={tab} onTabChange={setTab} isAdmin={false} onSearchClick={() => setSearchOpen(true)} />
+      </div>
+    </>
   );
 }

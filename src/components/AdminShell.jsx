@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Header from './Header';
 import GroupedNav from './GroupedNav';
+import Sidebar, { MobileBottomBar } from './Sidebar';
 import FeatureRequests from './FeatureRequests';
 import GlobalSearch from './GlobalSearch';
 import OnboardingTour from './OnboardingTour';
@@ -72,7 +73,7 @@ export default function AdminShell({ user, onLogout }) {
   const searchNavigate = (tabKey) => { setTab(tabKey); setSearchOpen(false); };
 
   return (
-    <div className="app-wrap">
+    <>
       {showOnboarding && (
         <OnboardingTour
           onComplete={() => setShowOnboarding(false)}
@@ -81,33 +82,41 @@ export default function AdminShell({ user, onLogout }) {
       )}
       <GlobalSearch isOpen={searchOpen} onClose={() => setSearchOpen(false)} onNavigate={searchNavigate} />
 
-      <Header user={user} onLogout={onLogout} badge={badge} onSearchClick={() => setSearchOpen(true)} />
-      <GroupedNav activeTab={tab} onTabChange={setTab} isAdmin={true} />
+      <div className="app-layout">
+        <Sidebar activeTab={tab} onTabChange={setTab} isAdmin={true} onSearchClick={() => setSearchOpen(true)} />
+        <div className="app-main">
+          <div className="app-wrap">
+            <Header user={user} onLogout={onLogout} badge={badge} onSearchClick={() => setSearchOpen(true)} />
+            <GroupedNav activeTab={tab} onTabChange={setTab} isAdmin={true} />
 
-      {tab === 'home'         && <HomePage user={user} onNavigate={setTab} recentPatients={recentPatients} />}
-      {tab === 'dashboard'    && <Dashboard />}
-      {tab === 'calc'         && <CalcView user={user} templateCodes={templateCodes} selectedPatient={selectedPatient} onClearTemplate={() => setTemplateCodes(null)} onClearPatient={() => setSelectedPatient('')} />}
-      {tab === 'newvisit'     && <NewVisitFlow user={user} />}
-      {tab === 'batch'        && <BatchVisitEntry user={user} />}
-      {tab === 'patients'     && <PatientDirectory user={user} onSelectPatient={selectPatient} />}
-      {tab === 'auths'        && <AuthTracker user={user} />}
-      {tab === 'templates'    && <TreatmentTemplates user={user} onApplyTemplate={applyTemplate} />}
-      {tab === 'visits'       && <VisitHistory user={user} adminView={true} />}
-      {tab === 'productivity' && <ProductivityTracker />}
-      {tab === 'rates'        && <RateManager />}
-      {tab === 'ratehistory'  && <RateHistory />}
-      {tab === 'payers'       && <PayerManager />}
-      {tab === 'comparison'   && <PayerComparison />}
-      {tab === 'providers'    && <ProviderManager />}
-      {tab === 'rules'        && <BillingRulesEditor />}
-      {tab === 'report'       && <MonthlyReport />}
-      {tab === 'yoy'          && <YearOverYear />}
-      {tab === 'data'         && <DataExportImport user={user} />}
-      {tab === 'backup'       && <DataBackup />}
-      {tab === 'users'        && <UserManager />}
-      {tab === 'combos'       && <AdminCombos />}
-      {tab === 'log'          && <ActivityLog />}
-      {tab === 'feedback'     && <FeatureRequests user={user} isAdmin={true} />}
-    </div>
+            {tab === 'home'         && <HomePage user={user} onNavigate={setTab} recentPatients={recentPatients} />}
+            {tab === 'dashboard'    && <Dashboard />}
+            {tab === 'calc'         && <CalcView user={user} templateCodes={templateCodes} selectedPatient={selectedPatient} onClearTemplate={() => setTemplateCodes(null)} onClearPatient={() => setSelectedPatient('')} />}
+            {tab === 'newvisit'     && <NewVisitFlow user={user} />}
+            {tab === 'batch'        && <BatchVisitEntry user={user} />}
+            {tab === 'patients'     && <PatientDirectory user={user} onSelectPatient={selectPatient} />}
+            {tab === 'auths'        && <AuthTracker user={user} />}
+            {tab === 'templates'    && <TreatmentTemplates user={user} onApplyTemplate={applyTemplate} />}
+            {tab === 'visits'       && <VisitHistory user={user} adminView={true} />}
+            {tab === 'productivity' && <ProductivityTracker />}
+            {tab === 'rates'        && <RateManager />}
+            {tab === 'ratehistory'  && <RateHistory />}
+            {tab === 'payers'       && <PayerManager />}
+            {tab === 'comparison'   && <PayerComparison />}
+            {tab === 'providers'    && <ProviderManager />}
+            {tab === 'rules'        && <BillingRulesEditor />}
+            {tab === 'report'       && <MonthlyReport />}
+            {tab === 'yoy'          && <YearOverYear />}
+            {tab === 'data'         && <DataExportImport user={user} />}
+            {tab === 'backup'       && <DataBackup />}
+            {tab === 'users'        && <UserManager />}
+            {tab === 'combos'       && <AdminCombos />}
+            {tab === 'log'          && <ActivityLog />}
+            {tab === 'feedback'     && <FeatureRequests user={user} isAdmin={true} />}
+          </div>
+        </div>
+        <MobileBottomBar activeTab={tab} onTabChange={setTab} isAdmin={true} onSearchClick={() => setSearchOpen(true)} />
+      </div>
+    </>
   );
 }
