@@ -1,19 +1,24 @@
-import { useState, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useAdminData } from '../utils/useAdminData';
 import { PT_EVALS as DEFAULT_PT_EVALS, OT_EVALS as DEFAULT_OT_EVALS } from '../data/codes';
 import { store } from '../utils/store';
 import { supabase } from '../utils/supabase';
 import { encryptPHI } from '../utils/crypto';
+import EightMinuteRule from './EightMinuteRule';
 import PdfExport from './PdfExport';
 
-export default function CalcView({ user }) {
+export default function CalcView({ user, templateCodes, selectedPatient, onClearTemplate, onClearPatient }) {
   const { loading: dataLoading, rates: RATES, payers: PAYERS, contractPayers: CONTRACT_PAYERS,
     billingRules: BILLING_RULES, codeLabels: CODE_LABELS, codeGroups: CODE_GROUPS,
     providers: PROVIDERS_MAP, allProviders: ALL_PROVIDERS } = useAdminData();
   const PT_EVALS = DEFAULT_PT_EVALS;
   const OT_EVALS = DEFAULT_OT_EVALS;
   const [mode, setMode]               = useState('fee');
-  const [provider, setProvider]       = useState('');
+  // Default provider to logged-in user's name if they're a provider
+  const [provider, setProvider]       = useState(() => {
+    const match = (ALL_PROVIDERS || []).find(p => p.name === user.name);
+    return match ? match.name : '';
+  });
   const [payer, setPayer]             = useState('');
   const [codes, setCodes]             = useState([]);
   const [search, setSearch]           = useState('');
@@ -30,6 +35,24 @@ export default function CalcView({ user }) {
   const [visitNotes, setVisitNotes]     = useState('');
   const [logSaving, setLogSaving]       = useState(false);
   const toastTimer = useRef(null);
+
+  // Apply template codes when passed from Templates tab
+  useEffect(() => {
+    if (templateCodes && templateCodes.length > 0) {
+      setCodes(templateCodes);
+      onClearTemplate?.();
+      showToast('Template applied!');
+    }
+  }, [templateCodes]);
+
+  // Apply selected patient name when passed from Patient Directory
+  useEffect(() => {
+    if (selectedPatient) {
+      setPatientName(selectedPatient);
+      setShowLogVisit(true);
+      onClearPatient?.();
+    }
+  }, [selectedPatient]);
 
   const showToast = msg => {
     setToast(msg);
@@ -406,6 +429,9 @@ export default function CalcView({ user }) {
               </div>
             )}
           </div>
+
+          {/* 8-Minute Rule */}
+          <EightMinuteRule codes={codes} />
 
           {/* Multi-Visit Projections */}
           {codes.length > 0 && payer && total > 0 && (
