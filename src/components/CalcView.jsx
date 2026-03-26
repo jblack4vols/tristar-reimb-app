@@ -3,6 +3,7 @@ import { useAdminData } from '../utils/useAdminData';
 import { PT_EVALS as DEFAULT_PT_EVALS, OT_EVALS as DEFAULT_OT_EVALS } from '../data/codes';
 import { store } from '../utils/store';
 import { supabase } from '../utils/supabase';
+import { encryptPHI } from '../utils/crypto';
 import PdfExport from './PdfExport';
 
 export default function CalcView({ user }) {
@@ -40,20 +41,22 @@ export default function CalcView({ user }) {
     if (!patientName.trim()) { alert('Patient name is required.'); return; }
     setLogSaving(true);
     try {
+      const savedName = patientName.trim();
       const pInfo = ALL_PROVIDERS.find(p => p.name === provider) || null;
+      // Encrypt PHI before storing in database
       await supabase.from('billing_entries').insert({
-        patient_name: patientName.trim(),
+        patient_name: encryptPHI(savedName),
         codes: [...codes],
         payer: mode === 'fee' ? payer : cPayer,
         provider: provider || '',
         location: pInfo?.location || user.location || '',
         total,
         visit_date: new Date().toISOString().split('T')[0],
-        notes: visitNotes.trim(),
+        notes: encryptPHI(visitNotes.trim()),
         entered_by: user.username,
       });
-      const savedName = patientName.trim();
-      await store.pushLog({ user: user.username, action: 'log_visit', detail: `${savedName} — $${total.toFixed(2)}` });
+      // Do NOT log patient name in activity log — HIPAA
+      await store.pushLog({ user: user.username, action: 'log_visit', detail: `Visit logged — $${total.toFixed(2)}` });
       setPatientName('');
       setVisitNotes('');
       setShowLogVisit(false);

@@ -14,6 +14,8 @@ const ACTION_COLORS = {
   save_combo:    '#FF8200',
   forgot_password: '#7c3aed',
   import_rates:  '#1565c0',
+  log_visit:     '#1b5e20',
+  auto_logout:   '#e65100',
 };
 
 export default function ActivityLog() {

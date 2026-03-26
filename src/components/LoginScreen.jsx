@@ -185,6 +185,13 @@ export default function LoginScreen({ form, setForm, onLogin, err }) {
         <div style={{ textAlign: 'center', fontSize: 12, color: '#9ca3af', marginTop: 12 }}>
           Contact your administrator if you need access.
         </div>
+
+        <div style={{ textAlign: 'center', fontSize: 10, color: '#9ca3af', marginTop: 16, lineHeight: 1.6, maxWidth: 360, margin: '16px auto 0' }}>
+          This system contains protected health information (PHI).
+          Unauthorized access is prohibited. By signing in, you agree
+          to comply with HIPAA regulations and Tristar PT privacy policies.
+          Sessions auto-expire after 15 minutes of inactivity.
+        </div>
       </div>
     </div>
   );

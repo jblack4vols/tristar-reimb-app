@@ -47,6 +47,7 @@ export default function App() {
   const [ready, setReady]             = useState(false);
   const [isOffline, setIsOffline]     = useState(!navigator.onLine);
 
+  // Offline detection
   useEffect(() => {
     const goOffline = () => setIsOffline(true);
     const goOnline  = () => setIsOffline(false);
@@ -57,6 +58,30 @@ export default function App() {
       window.removeEventListener('online', goOnline);
     };
   }, []);
+
+  // HIPAA: Auto-logout after 15 minutes of inactivity
+  useEffect(() => {
+    if (!currentUser) return;
+    const TIMEOUT = 15 * 60 * 1000; // 15 minutes
+    let timer;
+    const resetTimer = () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        store.pushLog({ user: currentUser?.username, action: 'auto_logout', detail: 'Inactivity timeout (15 min)' });
+        store.clearSession();
+        setCurrentUser(null);
+        setLoginForm({ username: '', password: '' });
+        alert('You have been signed out due to 15 minutes of inactivity.');
+      }, TIMEOUT);
+    };
+    const events = ['mousedown', 'keydown', 'touchstart', 'scroll'];
+    events.forEach(e => window.addEventListener(e, resetTimer));
+    resetTimer();
+    return () => {
+      clearTimeout(timer);
+      events.forEach(e => window.removeEventListener(e, resetTimer));
+    };
+  }, [currentUser]);
 
   useEffect(() => {
     // Load all data from Supabase in parallel with MSAL init

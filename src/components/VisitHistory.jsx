@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../utils/supabase';
+import { decryptPHI } from '../utils/crypto';
 import { useAdminData } from '../utils/useAdminData';
 
 export default function VisitHistory({ user, adminView = false }) {
@@ -29,7 +30,13 @@ export default function VisitHistory({ user, adminView = false }) {
 
     const { data, error } = await query;
     if (error) console.error('Visit history error:', error);
-    setEntries(data || []);
+    // Decrypt PHI fields
+    const decrypted = (data || []).map(e => ({
+      ...e,
+      patient_name: decryptPHI(e.patient_name),
+      notes: decryptPHI(e.notes),
+    }));
+    setEntries(decrypted);
     setLoading(false);
   };
 
