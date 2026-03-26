@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../utils/supabase';
-import { decryptPHI } from '../utils/crypto';
+import { encryptPHI, decryptPHI } from '../utils/crypto';
 import { useAdminData } from '../utils/useAdminData';
 
 export default function VisitHistory({ user, adminView = false }) {
@@ -41,6 +41,26 @@ export default function VisitHistory({ user, adminView = false }) {
   };
 
   useEffect(() => { fetchEntries(); }, [dateFrom, dateTo]);
+
+  const [editingId, setEditingId] = useState(null);
+  const [editForm, setEditForm] = useState({});
+
+  const startEdit = (entry) => {
+    setEditingId(entry.id);
+    setEditForm({ patient_name: entry.patient_name, payer: entry.payer, provider: entry.provider, notes: entry.notes || '', visit_date: entry.visit_date });
+  };
+
+  const saveEdit = async (id) => {
+    await supabase.from('billing_entries').update({
+      patient_name: encryptPHI(editForm.patient_name),
+      payer: editForm.payer,
+      provider: editForm.provider,
+      notes: encryptPHI(editForm.notes),
+      visit_date: editForm.visit_date,
+    }).eq('id', id);
+    setEntries(prev => prev.map(e => e.id === id ? { ...e, ...editForm } : e));
+    setEditingId(null);
+  };
 
   const deleteEntry = async (id) => {
     if (!confirm('Delete this visit entry?')) return;
@@ -184,11 +204,41 @@ export default function VisitHistory({ user, adminView = false }) {
                       </div>
                     ))}
                   </div>
-                  <div style={{ display: 'flex', gap: 6, marginTop: 10 }}>
-                    <button className="btn btn-danger btn-sm" onClick={(ev) => { ev.stopPropagation(); deleteEntry(e.id); }}>
-                      Delete
-                    </button>
-                  </div>
+                  {editingId === e.id ? (
+                    <div style={{ marginTop: 10, borderTop: '1.5px solid #FF8200', paddingTop: 10 }} onClick={ev => ev.stopPropagation()}>
+                      <div className="grid-2" style={{ marginBottom: 8 }}>
+                        <div>
+                          <label className="field-label">Patient Name</label>
+                          <input value={editForm.patient_name} onChange={ev => setEditForm(f => ({ ...f, patient_name: ev.target.value }))} />
+                        </div>
+                        <div>
+                          <label className="field-label">Date</label>
+                          <input type="date" value={editForm.visit_date} onChange={ev => setEditForm(f => ({ ...f, visit_date: ev.target.value }))} />
+                        </div>
+                        <div>
+                          <label className="field-label">Payer</label>
+                          <input value={editForm.payer} onChange={ev => setEditForm(f => ({ ...f, payer: ev.target.value }))} />
+                        </div>
+                        <div>
+                          <label className="field-label">Provider</label>
+                          <input value={editForm.provider} onChange={ev => setEditForm(f => ({ ...f, provider: ev.target.value }))} />
+                        </div>
+                      </div>
+                      <div style={{ marginBottom: 8 }}>
+                        <label className="field-label">Notes</label>
+                        <input value={editForm.notes} onChange={ev => setEditForm(f => ({ ...f, notes: ev.target.value }))} />
+                      </div>
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        <button className="btn btn-primary btn-sm" onClick={(ev) => { ev.stopPropagation(); saveEdit(e.id); }}>Save</button>
+                        <button className="btn btn-muted btn-sm" onClick={(ev) => { ev.stopPropagation(); setEditingId(null); }}>Cancel</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', gap: 6, marginTop: 10 }}>
+                      <button className="btn btn-muted btn-sm" onClick={(ev) => { ev.stopPropagation(); startEdit(e); }}>Edit</button>
+                      <button className="btn btn-danger btn-sm" onClick={(ev) => { ev.stopPropagation(); deleteEntry(e.id); }}>Delete</button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

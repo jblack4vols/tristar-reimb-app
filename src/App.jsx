@@ -59,17 +59,27 @@ export default function App() {
     };
   }, []);
 
+  const [showTimeoutWarning, setShowTimeoutWarning] = useState(false);
+
   // HIPAA: Auto-logout after 15 minutes of inactivity
   useEffect(() => {
     if (!currentUser) return;
     const TIMEOUT = 15 * 60 * 1000; // 15 minutes
-    let timer;
+    const WARNING = 13 * 60 * 1000; // 13 minutes (warn 2 min before)
+    let logoutTimer;
+    let warningTimer;
     const resetTimer = () => {
-      clearTimeout(timer);
-      timer = setTimeout(() => {
+      clearTimeout(logoutTimer);
+      clearTimeout(warningTimer);
+      setShowTimeoutWarning(false);
+      warningTimer = setTimeout(() => {
+        setShowTimeoutWarning(true);
+      }, WARNING);
+      logoutTimer = setTimeout(() => {
         store.pushLog({ user: currentUser?.username, action: 'auto_logout', detail: 'Inactivity timeout (15 min)' });
         store.clearSession();
         setCurrentUser(null);
+        setShowTimeoutWarning(false);
         setLoginForm({ username: '', password: '' });
         alert('You have been signed out due to 15 minutes of inactivity.');
       }, TIMEOUT);
@@ -78,7 +88,8 @@ export default function App() {
     events.forEach(e => window.addEventListener(e, resetTimer));
     resetTimer();
     return () => {
-      clearTimeout(timer);
+      clearTimeout(logoutTimer);
+      clearTimeout(warningTimer);
       events.forEach(e => window.removeEventListener(e, resetTimer));
     };
   }, [currentUser]);
@@ -164,6 +175,18 @@ export default function App() {
     </div>
   ) : null;
 
+  const timeoutBanner = showTimeoutWarning ? (
+    <div style={{ position: 'sticky', top: 0, zIndex: 999, background: '#fbbf24', color: '#78480f', padding: '10px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13, fontWeight: 700 }}>
+      <span>You'll be signed out in 2 minutes due to inactivity</span>
+      <button
+        onClick={() => { setShowTimeoutWarning(false); window.dispatchEvent(new Event('mousedown')); }}
+        style={{ background: '#78480f', color: '#fff', border: 'none', borderRadius: 6, padding: '4px 12px', cursor: 'pointer', fontWeight: 700 }}
+      >
+        Stay Signed In
+      </button>
+    </div>
+  ) : null;
+
   if (!ready) {
     return (
       <>
@@ -193,8 +216,8 @@ export default function App() {
 
   // Admin role: superadmin OR users with role 'admin'
   if (currentUser.role === 'superadmin' || currentUser.role === 'admin') {
-    return <>{offlineBanner}<AdminShell user={currentUser} onLogout={logout} /></>;
+    return <>{offlineBanner}{timeoutBanner}<AdminShell user={currentUser} onLogout={logout} /></>;
   }
 
-  return <>{offlineBanner}<UserShell user={currentUser} onLogout={logout} /></>;
+  return <>{offlineBanner}{timeoutBanner}<UserShell user={currentUser} onLogout={logout} /></>;
 }

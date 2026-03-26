@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 
 const LOGO = 'https://assets.cdn.filesafe.space/4OhLjdxKCuBxvgs4TpUU/media/6630c406f4d5b72faba066f0.jpeg';
 
-export default function Header({ user, onLogout, badge }) {
+export default function Header({ user, onLogout, badge, onSearchClick }) {
   const [theme, setTheme] = useState(() => {
     return localStorage.getItem('trc_theme') || 'light';
   });
@@ -34,6 +34,11 @@ export default function Header({ user, onLogout, badge }) {
       <div className="header-right">
         <div className="header-badge">{badge}</div>
         <div className="header-name">{user.name}</div>
+        {onSearchClick && (
+          <button className="header-signout" onClick={onSearchClick} style={{ marginRight: 4 }} title="Search (Ctrl+K)">
+            🔍
+          </button>
+        )}
         <button className="header-signout" onClick={toggleTheme} style={{ marginRight: 4 }}>
           {theme === 'dark' ? '☀️' : '🌙'}
         </button>

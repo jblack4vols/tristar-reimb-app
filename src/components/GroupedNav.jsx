@@ -12,6 +12,7 @@ const NAV_GROUPS = [
     tabs: [
       { k: 'calc',      label: 'Calculator' },
       { k: 'newvisit',  label: 'New Visit' },
+      { k: 'batch',     label: 'Batch Entry' },
       { k: 'patients',  label: 'Patients' },
       { k: 'auths',     label: 'Authorizations' },
       { k: 'templates', label: 'Templates' },
@@ -54,6 +55,7 @@ const NAV_GROUPS = [
       { k: 'providers', label: 'Providers' },
       { k: 'users',     label: 'Users' },
       { k: 'data',      label: 'Import/Export' },
+      { k: 'backup',    label: 'Data Backup' },
       { k: 'log',       label: 'Activity Log' },
     ],
     adminOnly: true,
