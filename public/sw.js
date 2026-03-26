@@ -5,10 +5,10 @@ const DYNAMIC_CACHE = `${CACHE_VERSION}-dynamic`;
 
 // App shell files to pre-cache on install
 const APP_SHELL = [
-  '/tristar-reimb-app/',
-  '/tristar-reimb-app/index.html',
-  '/tristar-reimb-app/manifest.json',
-  '/tristar-reimb-app/icon.svg',
+  '/',
+  '/index.html',
+  '/manifest.json',
+  '/icon.svg',
 ];
 
 // ── Install: cache the app shell ──────────────────────────────────────
@@ -105,7 +105,7 @@ async function networkFirst(request) {
 
     // For navigation requests, try returning the cached index.html
     if (request.mode === 'navigate') {
-      const fallback = await caches.match('/tristar-reimb-app/index.html');
+      const fallback = await caches.match('/index.html');
       if (fallback) return fallback;
     }
 

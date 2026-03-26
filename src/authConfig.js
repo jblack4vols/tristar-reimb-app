@@ -4,8 +4,8 @@ export const MSAL_CONFIG = {
   auth: {
     clientId: 'debda2f0-a35b-44c9-8e0b-9d1d306c49a8',
     authority: 'https://login.microsoftonline.com/668d2c67-481c-4c6c-8904-b08dfd68308c',
-    redirectUri: 'https://jblack4vols.github.io/tristar-reimb-app/',
-    postLogoutRedirectUri: 'https://jblack4vols.github.io/tristar-reimb-app/',
+    redirectUri: 'https://reimbursementcalculator.tristarpt.com/',
+    postLogoutRedirectUri: 'https://reimbursementcalculator.tristarpt.com/',
     navigateToLoginRequestUrl: false,
   },
   cache: {
