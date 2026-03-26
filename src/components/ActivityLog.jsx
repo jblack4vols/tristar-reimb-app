@@ -18,7 +18,7 @@ const ACTION_COLORS = {
   auto_logout:   '#e65100',
 };
 
-export default function ActivityLog() {
+export default function ActivityLog({ user }) {
   const [log, setLog] = useState(() => store.getLog());
 
   const clearLog = async () => {
@@ -33,7 +33,9 @@ export default function ActivityLog() {
         <div className="section-head">
           Activity Log <span style={{ fontSize: 14, fontWeight: 500, color: '#6b7280' }}>({log.length} entries)</span>
         </div>
-        <button className="btn btn-danger btn-sm" onClick={clearLog}>Clear Log</button>
+        {user?.role === 'superadmin' && (
+          <button className="btn btn-danger btn-sm" onClick={clearLog}>Clear Log</button>
+        )}
       </div>
 
       {log.length === 0 && (

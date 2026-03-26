@@ -204,7 +204,7 @@ function AddCodeForm({ payers, onAdd, onCancel }) {
 /*  Main Component                                                    */
 /* ------------------------------------------------------------------ */
 
-export default function RateManager() {
+export default function RateManager({ user }) {
   const { loading, rates, payers, codeLabels, codeGroups } = useAdminData();
   const [search, setSearch] = useState('');
   const [activeGroup, setActiveGroup] = useState(null);
@@ -461,29 +461,33 @@ export default function RateManager() {
                       textAlign: 'center',
                     }}
                   >
-                    {confirmDelete === code ? (
-                      <span style={{ display: 'flex', gap: 4, justifyContent: 'center' }}>
-                        <button
-                          className="btn btn-sm btn-danger"
-                          onClick={() => handleDeleteCode(code)}
-                        >
-                          Confirm
-                        </button>
-                        <button
-                          className="btn btn-sm btn-muted"
-                          onClick={() => setConfirmDelete(null)}
-                        >
-                          No
-                        </button>
-                      </span>
-                    ) : (
-                      <button
-                        className="btn btn-sm btn-danger"
-                        onClick={() => setConfirmDelete(code)}
-                        title={`Delete ${code}`}
-                      >
-                        Delete
-                      </button>
+                    {user?.role === 'superadmin' && (
+                      <>
+                        {confirmDelete === code ? (
+                          <span style={{ display: 'flex', gap: 4, justifyContent: 'center' }}>
+                            <button
+                              className="btn btn-sm btn-danger"
+                              onClick={() => handleDeleteCode(code)}
+                            >
+                              Confirm
+                            </button>
+                            <button
+                              className="btn btn-sm btn-muted"
+                              onClick={() => setConfirmDelete(null)}
+                            >
+                              No
+                            </button>
+                          </span>
+                        ) : (
+                          <button
+                            className="btn btn-sm btn-danger"
+                            onClick={() => setConfirmDelete(code)}
+                            title={`Delete ${code}`}
+                          >
+                            Delete
+                          </button>
+                        )}
+                      </>
                     )}
                   </td>
                   {/* Payer rate cells */}

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useAdminData } from '../../utils/useAdminData';
 import * as ds from '../../utils/adminDataStore';
 
-export default function PayerManager() {
+export default function PayerManager({ user }) {
   const { payers, contractPayers } = useAdminData();
 
   // Fee schedule payer form state
@@ -162,7 +162,9 @@ export default function PayerManager() {
               <span style={{ fontWeight: 600, fontSize: 15 }}>{name}</span>
               <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
                 <button className="btn btn-muted btn-sm" onClick={() => startRename(name)}>Rename</button>
-                <button className="btn btn-danger btn-sm" onClick={() => handleDeletePayer(name)}>Delete</button>
+                {user?.role === 'superadmin' && (
+                  <button className="btn btn-danger btn-sm" onClick={() => handleDeletePayer(name)}>Delete</button>
+                )}
               </div>
             </>
           )}
@@ -233,7 +235,9 @@ export default function PayerManager() {
                 ${rate.toFixed(2)} / visit
               </span>
               <button className="btn btn-muted btn-sm" onClick={() => startEditContract(name, rate)}>Edit</button>
-              <button className="btn btn-danger btn-sm" onClick={() => handleDeleteContract(name)}>Delete</button>
+              {user?.role === 'superadmin' && (
+                <button className="btn btn-danger btn-sm" onClick={() => handleDeleteContract(name)}>Delete</button>
+              )}
             </div>
           )}
         </div>

@@ -236,7 +236,9 @@ export default function VisitHistory({ user, adminView = false }) {
                   ) : (
                     <div style={{ display: 'flex', gap: 6, marginTop: 10 }}>
                       <button className="btn btn-muted btn-sm" onClick={(ev) => { ev.stopPropagation(); startEdit(e); }}>Edit</button>
-                      <button className="btn btn-danger btn-sm" onClick={(ev) => { ev.stopPropagation(); deleteEntry(e.id); }}>Delete</button>
+                      {user?.role === 'superadmin' && (
+                        <button className="btn btn-danger btn-sm" onClick={(ev) => { ev.stopPropagation(); deleteEntry(e.id); }}>Delete</button>
+                      )}
                     </div>
                   )}
                 </div>

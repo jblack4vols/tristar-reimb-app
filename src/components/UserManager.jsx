@@ -216,7 +216,9 @@ export default function UserManager({ user }) {
             <button className={`btn btn-sm ${u.active ? 'btn-muted' : 'btn-primary'}`} onClick={() => toggleActive(u)}>
               {u.active ? 'Deactivate' : 'Activate'}
             </button>
-            <button className="btn btn-sm btn-danger" onClick={() => del(u.id)}>Delete</button>
+            {user?.role === 'superadmin' && (
+              <button className="btn btn-sm btn-danger" onClick={() => del(u.id)}>Delete</button>
+            )}
           </div>
         </div>
       ))}

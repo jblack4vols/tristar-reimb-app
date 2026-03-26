@@ -50,7 +50,9 @@ export default function UserCombos({ user }) {
                 {c.savedAt && <span style={{ color: '#9ca3af', marginLeft: 10 }}>{new Date(c.savedAt).toLocaleDateString()}</span>}
               </div>
             )}
-            <button className="btn btn-danger btn-sm" onClick={() => del(c.id)}>Delete</button>
+            {user?.role === 'superadmin' && (
+              <button className="btn btn-danger btn-sm" onClick={() => del(c.id)}>Delete</button>
+            )}
           </div>
         );
       })}

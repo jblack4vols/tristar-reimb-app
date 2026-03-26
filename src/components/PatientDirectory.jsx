@@ -415,12 +415,14 @@ export default function PatientDirectory({ user, onSelectPatient }) {
               >
                 Edit
               </button>
-              <button
-                className="btn btn-danger btn-sm"
-                onClick={() => deletePatient(p.id)}
-              >
-                Delete
-              </button>
+              {user?.role === 'superadmin' && (
+                <button
+                  className="btn btn-danger btn-sm"
+                  onClick={() => deletePatient(p.id)}
+                >
+                  Delete
+                </button>
+              )}
             </div>
           </div>
         ))}

@@ -302,7 +302,9 @@ export default function TreatmentTemplates({ user, onApplyTemplate }) {
               {isAdmin && (
                 <>
                   <button className="btn btn-ghost btn-sm" onClick={() => openEdit(t)}>Edit</button>
-                  <button className="btn btn-danger btn-sm" onClick={() => handleDelete(t.id)}>Delete</button>
+                  {user?.role === 'superadmin' && (
+                    <button className="btn btn-danger btn-sm" onClick={() => handleDelete(t.id)}>Delete</button>
+                  )}
                 </>
               )}
               {t.created_by && (

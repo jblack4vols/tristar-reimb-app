@@ -59,7 +59,9 @@ export default function AdminCombos({ user }) {
               {c.owner && <span style={{ marginRight: 12 }}><strong>Owner:</strong> {c.owner}</span>}
               {c.savedAt && <span style={{ color: '#9ca3af' }}>{new Date(c.savedAt).toLocaleDateString()}</span>}
             </div>
-            <button className="btn btn-danger btn-sm" onClick={() => del(c.id)}>Delete</button>
+            {user?.role === 'superadmin' && (
+              <button className="btn btn-danger btn-sm" onClick={() => del(c.id)}>Delete</button>
+            )}
           </div>
         );
       })}

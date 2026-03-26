@@ -156,9 +156,11 @@ export default function FeatureRequests({ user, isAdmin = false }) {
                     <option value="done">Done</option>
                     <option value="declined">Declined</option>
                   </select>
-                  <button className="btn btn-danger btn-sm" style={{ padding: '3px 10px', fontSize: 11 }} onClick={() => deleteRequest(r.id)}>
-                    Delete
-                  </button>
+                  {user?.role === 'superadmin' && (
+                    <button className="btn btn-danger btn-sm" style={{ padding: '3px 10px', fontSize: 11 }} onClick={() => deleteRequest(r.id)}>
+                      Delete
+                    </button>
+                  )}
                 </div>
               )}
             </div>

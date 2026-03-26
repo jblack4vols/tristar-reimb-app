@@ -101,9 +101,9 @@ export default function AdminShell({ user, onLogout }) {
             {tab === 'templates'    && <TreatmentTemplates user={user} onApplyTemplate={applyTemplate} />}
             {tab === 'visits'       && <VisitHistory user={user} adminView={true} />}
             {tab === 'productivity' && <ProductivityTracker />}
-            {tab === 'rates'        && <RateManager />}
+            {tab === 'rates'        && <RateManager user={user} />}
             {tab === 'ratehistory'  && <RateHistory />}
-            {tab === 'payers'       && <PayerManager />}
+            {tab === 'payers'       && <PayerManager user={user} />}
             {tab === 'comparison'   && <PayerComparison />}
             {tab === 'providers'    && <ProviderManager />}
             {tab === 'rules'        && <BillingRulesEditor />}
@@ -113,7 +113,7 @@ export default function AdminShell({ user, onLogout }) {
             {tab === 'backup'       && <DataBackup />}
             {tab === 'users'        && <UserManager user={user} />}
             {tab === 'combos'       && <AdminCombos user={user} />}
-            {tab === 'log'          && <ActivityLog />}
+            {tab === 'log'          && <ActivityLog user={user} />}
             {tab === 'feedback'     && <FeatureRequests user={user} isAdmin={true} />}
           </div>
         </div>
