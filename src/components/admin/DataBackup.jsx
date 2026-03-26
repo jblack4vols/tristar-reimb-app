@@ -17,7 +17,7 @@ const TABLES = [
   { key: 'combos', table: 'combos', order: 'saved_at' },
   { key: 'activity_log', table: 'activity_log', order: 'ts' },
   { key: 'billing_entries', table: 'billing_entries', order: 'visit_date', decryptFields: ['patient_name', 'notes'] },
-  { key: 'patients', table: 'patients', order: 'created_at', decryptFields: ['name', 'notes'] },
+  { key: 'patients', table: 'patients', order: 'created_at', decryptFields: ['encrypted_name', 'notes'] },
   { key: 'authorizations', table: 'authorizations', order: 'created_at' },
   { key: 'treatment_templates', table: 'treatment_templates', order: 'name' },
 ];

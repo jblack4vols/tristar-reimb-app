@@ -77,7 +77,7 @@ export default function GlobalSearch({ isOpen, onClose, onNavigate }) {
     try {
       const { data } = await supabase
         .from('patients')
-        .select('id, name')
+        .select('id, encrypted_name')
         .order('created_at', { ascending: false })
         .limit(100);
 

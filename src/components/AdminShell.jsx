@@ -28,6 +28,7 @@ import VisitHistory from './VisitHistory';
 import PatientDirectory from './PatientDirectory';
 import AuthTracker from './AuthTracker';
 import TreatmentTemplates from './TreatmentTemplates';
+import QuickStartGuide from './QuickStartGuide';
 import { supabase } from '../utils/supabase';
 import { decryptPHI } from '../utils/crypto';
 
@@ -90,6 +91,7 @@ export default function AdminShell({ user, onLogout }) {
             <GroupedNav activeTab={tab} onTabChange={setTab} isAdmin={true} />
 
             {tab === 'home'         && <HomePage user={user} onNavigate={setTab} recentPatients={recentPatients} />}
+            {tab === 'guide'        && <QuickStartGuide />}
             {tab === 'dashboard'    && <Dashboard />}
             {tab === 'calc'         && <CalcView user={user} templateCodes={templateCodes} selectedPatient={selectedPatient} onClearTemplate={() => setTemplateCodes(null)} onClearPatient={() => setSelectedPatient('')} />}
             {tab === 'newvisit'     && <NewVisitFlow user={user} />}
@@ -109,8 +111,8 @@ export default function AdminShell({ user, onLogout }) {
             {tab === 'yoy'          && <YearOverYear />}
             {tab === 'data'         && <DataExportImport user={user} />}
             {tab === 'backup'       && <DataBackup />}
-            {tab === 'users'        && <UserManager />}
-            {tab === 'combos'       && <AdminCombos />}
+            {tab === 'users'        && <UserManager user={user} />}
+            {tab === 'combos'       && <AdminCombos user={user} />}
             {tab === 'log'          && <ActivityLog />}
             {tab === 'feedback'     && <FeatureRequests user={user} isAdmin={true} />}
           </div>

@@ -351,6 +351,6 @@ export async function importRatesCSV(csvString, user) {
     await loadAllData();
   }
 
-  if (user) store.pushLog({ user: user.username, action: 'import_rates', detail: `${updated} rate values updated via CSV` });
+  if (user) await store.pushLog({ user: user.username, action: 'import_rates', detail: `${updated} rate values updated via CSV` });
   return { success: true, updated, unknownPayers };
 }

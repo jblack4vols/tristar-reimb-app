@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { store } from '../utils/store';
 import { useAdminData } from '../utils/useAdminData';
 
-export default function AdminCombos() {
+export default function AdminCombos({ user }) {
   const { rates: RATES } = useAdminData();
   const [combos, setCombos] = useState(() => store.getCombos());
   const [search, setSearch] = useState('');
@@ -11,7 +11,7 @@ export default function AdminCombos() {
     if (!confirm('Delete this combo?')) return;
     const up = store.getCombos().filter(c => c.id !== id);
     await store.setCombos(up);
-    await store.pushLog({ user: 'jordan', action: 'delete_combo', detail: id });
+    await store.pushLog({ user: user?.username || 'admin', action: 'delete_combo', detail: id });
     setCombos(up);
   };
 

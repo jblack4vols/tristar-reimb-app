@@ -75,8 +75,8 @@ export default function App() {
       warningTimer = setTimeout(() => {
         setShowTimeoutWarning(true);
       }, WARNING);
-      logoutTimer = setTimeout(() => {
-        store.pushLog({ user: currentUser?.username, action: 'auto_logout', detail: 'Inactivity timeout (15 min)' });
+      logoutTimer = setTimeout(async () => {
+        await store.pushLog({ user: currentUser?.username, action: 'auto_logout', detail: 'Inactivity timeout (15 min)' });
         store.clearSession();
         setCurrentUser(null);
         setShowTimeoutWarning(false);
@@ -106,7 +106,7 @@ export default function App() {
     Promise.race([
       Promise.all([storePromise, dataPromise, msalPromise]),
       timeout,
-    ]).then((result) => {
+    ]).then(async (result) => {
       setReady(true);
       if (result === 'timeout') {
         console.warn('App init timed out — loading with cached/default data');
@@ -118,7 +118,7 @@ export default function App() {
       if (account) {
         const msUser = resolveMsUser(account);
         store.setSession(msUser);
-        store.pushLog({ user: msUser.username, action: 'login', detail: 'Microsoft SSO' });
+        await store.pushLog({ user: msUser.username, action: 'login', detail: 'Microsoft SSO' });
         setCurrentUser(msUser);
       } else {
         const sess = store.getSession();

@@ -6,6 +6,7 @@ const NAV_GROUPS = [
     icon: '🏠',
     tabs: [
       { k: 'home', label: 'Home' },
+      { k: 'guide', label: 'Quick Start Guide' },
     ],
   },
   {

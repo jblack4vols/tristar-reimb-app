@@ -6,7 +6,8 @@ import { useAdminData } from '../utils/useAdminData';
 
 const BLANK = { id:'', name:'', username:'', password:'', email:'', location:'', role:'staff', active:true };
 
-export default function UserManager() {
+export default function UserManager({ user }) {
+  const currentUsername = user?.username || 'admin';
   const { providers: PROVIDERS_MAP, allProviders } = useAdminData();
   const [users, setUsers]     = useState(() => store.getUsers());
   const [form, setForm]       = useState(BLANK);
@@ -33,14 +34,14 @@ export default function UserManager() {
       let updated;
       if (editing) {
         updated = users.map(u => u.id === formWithHash.id ? { ...formWithHash } : u);
-        await store.pushLog({ user: 'jordan', action: 'edit_user', detail: `Edited ${formWithHash.username}` });
+        await store.pushLog({ user: currentUsername, action: 'edit_user', detail: `Edited ${formWithHash.username}` });
       } else {
         if (users.find(u => u.username.toLowerCase() === form.username.toLowerCase())) {
           alert('Username already exists.'); setSaving(false); return;
         }
         const nu = { ...formWithHash, id: `u_${Date.now()}` };
         updated = [...users, nu];
-        await store.pushLog({ user: 'jordan', action: 'create_user', detail: `Created ${formWithHash.username}` });
+        await store.pushLog({ user: currentUsername, action: 'create_user', detail: `Created ${formWithHash.username}` });
         // Queue welcome email if user has an email
         if (form.email) {
           await supabase.from('email_queue').insert({
@@ -65,14 +66,14 @@ export default function UserManager() {
     const u = users.find(x => x.id === id);
     const up = users.filter(x => x.id !== id);
     await store.setUsers(up);
-    await store.pushLog({ user: 'jordan', action: 'delete_user', detail: u?.username });
+    await store.pushLog({ user: currentUsername, action: 'delete_user', detail: u?.username });
     setUsers(up);
   };
 
   const toggleActive = async (u) => {
     const up = users.map(x => x.id === u.id ? { ...x, active: !x.active } : x);
     await store.setUsers(up);
-    await store.pushLog({ user: 'jordan', action: u.active ? 'deactivate' : 'activate', detail: u.username });
+    await store.pushLog({ user: currentUsername, action: u.active ? 'deactivate' : 'activate', detail: u.username });
     setUsers(up);
   };
 
@@ -105,7 +106,7 @@ export default function UserManager() {
     try {
       const updated = [...users, ...newUsers];
       await store.setUsers(updated);
-      await store.pushLog({ user: 'jordan', action: 'bulk_create_users', detail: `Created ${newUsers.length} accounts from providers` });
+      await store.pushLog({ user: currentUsername, action: 'bulk_create_users', detail: `Created ${newUsers.length} accounts from providers` });
       setUsers(updated);
       alert(`${newUsers.length} accounts created successfully!`);
     } catch (e) { alert('Failed: ' + e.message); }
