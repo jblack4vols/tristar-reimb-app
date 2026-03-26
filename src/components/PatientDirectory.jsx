@@ -161,7 +161,6 @@ export default function PatientDirectory({ user, onSelectPatient }) {
           .eq('id', editing);
         if (error) throw error;
       } else {
-        payload.created_by = user?.username || 'unknown';
         const { error } = await supabase
           .from('patients')
           .insert(payload);
