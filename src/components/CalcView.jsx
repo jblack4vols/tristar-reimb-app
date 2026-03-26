@@ -94,12 +94,12 @@ export default function CalcView({ user, templateCodes, selectedPatient, onClear
 
   const groups = useMemo(() => [
     { key: 'Evals', label: isOT ? 'OT Evals' : 'PT Evals', codes: isOT ? OT_EVALS : PT_EVALS },
-    ...CODE_GROUPS,
-  ], [isOT]);
+    ...(CODE_GROUPS || []),
+  ], [isOT, CODE_GROUPS]);
 
   const visibleCodes = useMemo(() => {
     const src = grp === 'All'
-      ? [...(isOT ? OT_EVALS : PT_EVALS), ...CODE_GROUPS.flatMap(g => g.codes)]
+      ? [...(isOT ? OT_EVALS : PT_EVALS), ...(CODE_GROUPS || []).flatMap(g => g.codes || [])]
       : (groups.find(g => g.key === grp)?.codes || []);
     if (!search) return src;
     const t = search.toLowerCase();

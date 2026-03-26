@@ -73,6 +73,8 @@ function getBillableUnits(totalMinutes) {
 export default function EightMinuteRule({ codes }) {
   const [totalMinutes, setTotalMinutes] = useState('');
 
+  if (!codes || codes.length === 0) return null;
+
   const { timedCodes, untimedCodes } = useMemo(() => {
     const timed = [];
     const untimed = [];

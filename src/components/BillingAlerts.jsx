@@ -2,12 +2,16 @@ import { useMemo } from 'react';
 import { getBillingWarnings } from '../utils/billingOptimizer';
 
 export default function BillingAlerts({ codes, payer, rates, codeLabels }) {
-  const warnings = useMemo(
-    () => getBillingWarnings(codes, payer, rates),
-    [codes, payer, rates]
-  );
+  const warnings = useMemo(() => {
+    try {
+      return getBillingWarnings(codes || [], payer || '', rates || {});
+    } catch (e) {
+      console.error('BillingAlerts error:', e);
+      return [];
+    }
+  }, [codes, payer, rates]);
 
-  if (warnings.length === 0) return null;
+  if (!warnings || warnings.length === 0) return null;
 
   return (
     <div style={{ marginBottom: 14 }}>

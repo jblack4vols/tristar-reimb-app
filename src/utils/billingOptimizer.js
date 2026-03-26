@@ -147,7 +147,7 @@ export function getOptimizationSuggestions(selectedCodes, payer, rates) {
 export function getBillingWarnings(selectedCodes, payer, rates) {
   const warnings = [];
 
-  if (!payer || selectedCodes.length === 0) return warnings;
+  if (!payer || !selectedCodes || !rates || selectedCodes.length === 0) return warnings;
 
   // Check for codes with $0 rate (not covered)
   const zeroCodes = selectedCodes.filter(c => ((rates[c] || {})[payer] || 0) === 0);
