@@ -131,6 +131,11 @@ input:focus, select:focus { border-color: var(--orange); }
   grid-template-columns: 1fr 1fr;
   gap: 12px;
 }
+.grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
 
 /* ── Nav tabs ── */
 .nav-tabs {
@@ -694,9 +699,52 @@ input:focus, select:focus { border-color: var(--orange); }
 }
 
 /* ── Responsive ── */
+
+/* Large desktop */
+@media (min-width: 1400px) {
+  .app-wrap     { max-width: 1400px; }
+  .grid-2       { gap: 20px; }
+  .code-grid    { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); }
+}
+
+/* Tablet */
+@media (max-width: 768px) {
+  .app-wrap     { max-width: 100%; padding: 14px 14px 100px; }
+  .grid-3       { grid-template-columns: 1fr 1fr; }
+  .code-grid    { max-height: 320px; }
+  .rate-table-wrap { max-height: 500px; }
+  .total-amount { font-size: 34px; }
+  .app-header   { flex-wrap: wrap; gap: 8px; }
+}
+
+/* Mobile */
 @media (max-width: 480px) {
   .grid-2       { grid-template-columns: 1fr; }
-  .total-amount { font-size: 32px; }
-  .app-wrap     { padding: 12px 12px 100px; }
-  .header-title { font-size: 15px; }
+  .grid-3       { grid-template-columns: 1fr; }
+  .total-amount { font-size: 28px; }
+  .app-wrap     { padding: 10px 10px 100px; }
+  .header-title { font-size: 14px; }
+  .header-org   { display: none; }
+  .header-logo  { width: 36px; height: 36px; }
+  .header-left  { gap: 8px; }
+  .header-right { font-size: 11px; }
+  .header-badge { font-size: 10px; padding: 2px 8px; }
+  .header-name  { font-size: 12px; }
+  .nav-tab      { padding: 6px 12px; font-size: 12px; }
+  .section-head { font-size: 18px; }
+  .code-grid    { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); max-height: 260px; }
+  .code-btn     { min-height: 60px; padding: 8px; }
+  .code-btn-title { font-size: 12px; }
+  .code-btn-desc  { font-size: 10px; }
+  .rate-table-wrap { max-height: 400px; }
+  .rate-table th, .rate-table td { padding: 6px 8px; font-size: 12px; }
+  .btn          { padding: 10px 16px; font-size: 14px; }
+  .btn-sm       { padding: 7px 12px; font-size: 12px; }
+  .group-pill   { padding: 6px 10px; font-size: 12px; }
+  .mode-btn     { padding: 8px 6px; font-size: 13px; }
+  .card         { padding: 14px; }
+  .card-surface { padding: 14px; }
+  .field-label  { font-size: 10px; }
+  .login-logo img { width: 70px; height: 70px; }
+  .login-title  { font-size: 19px; }
 }

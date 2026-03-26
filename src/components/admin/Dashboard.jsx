@@ -65,7 +65,7 @@ export default function Dashboard() {
       <h2 className="section-head">Dashboard</h2>
 
       {/* Stat Cards */}
-      <div className="grid-2" style={{ gap: 12, marginBottom: 24 }}>
+      <div className="grid-3" style={{ gap: 12, marginBottom: 24 }}>
         {statCards.map(s => (
           <div className="card" key={s.label}>
             <span className="field-label">{s.label}</span>
