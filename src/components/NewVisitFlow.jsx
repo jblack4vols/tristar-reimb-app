@@ -631,8 +631,8 @@ export default function NewVisitFlow({ user }) {
           <BillingAlerts
             codes={codes}
             payer={payer}
-            rates={rates}
-            codeLabels={codeLabels}
+            rates={RATES}
+            codeLabels={CODE_LABELS}
           />
         )}
 
