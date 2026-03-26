@@ -633,7 +633,6 @@ export default function NewVisitFlow({ user }) {
             payer={payer}
             rates={rates}
             codeLabels={codeLabels}
-            onSwapCode={(oldC, newC) => setCodes(prev => prev.map(c => c === oldC ? newC : c))}
           />
         )}
 

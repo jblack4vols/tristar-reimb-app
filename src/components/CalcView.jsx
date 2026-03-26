@@ -119,7 +119,6 @@ export default function CalcView({ user, templateCodes, selectedPatient, onClear
   );
 
   const toggle = c => setCodes(p => p.includes(c) ? p.filter(x => x !== c) : [...p, c]);
-  const swapCode = (oldCode, newCode) => setCodes(p => p.map(c => c === oldCode ? newCode : c));
 
   const favCodes = useMemo(() => {
     if (!provider) return [];
@@ -366,7 +365,6 @@ export default function CalcView({ user, templateCodes, selectedPatient, onClear
               payer={payer}
               rates={RATES}
               codeLabels={CODE_LABELS}
-              onSwapCode={swapCode}
             />
           )}
 
