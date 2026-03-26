@@ -46,7 +46,7 @@ export default function UserManager() {
             to_email: form.email,
             to_name: form.name,
             subject: 'Welcome to Tristar PT Reimbursement Calculator',
-            body: `Hi ${form.name},\n\nYour account has been created.\n\nUsername: ${form.username}\nPassword: ${form.password}\nLocation: ${form.location || 'Not assigned'}\n\nSign in at: https://reimbursementcalculator.tristarpt.com/\n\nIf you have a Tristar Microsoft 365 account, you can also use "Sign in with Microsoft 365".\n\n— Tristar Physical Therapy`,
+            body: `Hi ${form.name},\n\nYour account has been created.\n\nUsername: ${form.username}\nPassword: ${form.password}\nLocation: ${form.location || 'Not assigned'}\n\nSign in at: https://rcalc.tristarpt.com/\n\nIf you have a Tristar Microsoft 365 account, you can also use "Sign in with Microsoft 365".\n\n— Tristar Physical Therapy`,
           }).then(({ error }) => { if (error) console.error('Email queue error:', error); });
         }
       }
