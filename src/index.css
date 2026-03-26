@@ -629,7 +629,41 @@ input:focus, select:focus { border-color: var(--orange); }
 .sidebar-search-kbd { font-size: 11px; background: #e5e7eb; padding: 1px 6px; border-radius: 4px; font-weight: 600; }
 
 /* Sidebar nav */
-.sidebar-nav { flex: 1; padding: 0 8px 16px; }
+.sidebar-nav { flex: 1; padding: 0 8px 8px; overflow-y: auto; }
+
+/* Sidebar footer */
+.sidebar-footer {
+  padding: 8px;
+  border-top: 1.5px solid #f3f4f6;
+  flex-shrink: 0;
+}
+.sidebar-footer-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  border: none;
+  background: transparent;
+  color: #6b7280;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: var(--font);
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background 0.1s;
+  -webkit-tap-highlight-color: transparent;
+}
+.sidebar-footer-btn:hover { background: #f3f4f6; }
+.sidebar-footer-btn.active { background: var(--orange-light); color: var(--orange); font-weight: 700; }
+.sidebar-logout-btn { color: #b71c1c; }
+.sidebar-logout-btn:hover { background: #fef2f2; }
+.sidebar-footer-user {
+  margin-left: auto;
+  font-size: 11px;
+  color: #9ca3af;
+  font-weight: 400;
+}
 .sidebar-group { margin-bottom: 2px; }
 .sidebar-group-btn {
   display: flex;
@@ -834,6 +868,11 @@ input:focus, select:focus { border-color: var(--orange); }
 [data-theme="dark"] .sidebar-group-btn.active { color: #e5e5e5; }
 [data-theme="dark"] .sidebar-item { color: #9ca3af; }
 [data-theme="dark"] .sidebar-item:hover { background: #2a2a2a; color: #e5e5e5; }
+[data-theme="dark"] .sidebar-footer { border-color: #333; }
+[data-theme="dark"] .sidebar-footer-btn { color: #9ca3af; }
+[data-theme="dark"] .sidebar-footer-btn:hover { background: #2a2a2a; }
+[data-theme="dark"] .sidebar-logout-btn { color: #ef4444; }
+[data-theme="dark"] .sidebar-logout-btn:hover { background: #2a1a1a; }
 [data-theme="dark"] .mobile-bottom-bar { background: #1a1a1a; border-color: #333; }
 [data-theme="dark"] .mobile-tab { color: #6b7280; }
 [data-theme="dark"] .sidebar::-webkit-scrollbar-thumb { background: #444; }

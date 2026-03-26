@@ -61,7 +61,7 @@ export default function UserShell({ user, onLogout }) {
       <GlobalSearch isOpen={searchOpen} onClose={() => setSearchOpen(false)} onNavigate={searchNavigate} />
 
       <div className="app-layout">
-        <Sidebar activeTab={tab} onTabChange={setTab} isAdmin={false} onSearchClick={() => setSearchOpen(true)} />
+        <Sidebar activeTab={tab} onTabChange={setTab} isAdmin={false} onSearchClick={() => setSearchOpen(true)} onLogout={onLogout} userName={user.name} />
         <div className="app-main">
           <div className="app-wrap">
             <Header user={user} onLogout={onLogout} badge={user.location || 'Staff'} onSearchClick={() => setSearchOpen(true)} />

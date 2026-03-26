@@ -5,8 +5,7 @@ const NAV_GROUPS = [
     label: 'Home',
     icon: '🏠',
     tabs: [
-      { k: 'home',     label: 'Home' },
-      { k: 'feedback', label: 'Feature Requests' },
+      { k: 'home', label: 'Home' },
     ],
   },
   {
@@ -65,7 +64,7 @@ const NAV_GROUPS = [
   },
 ];
 
-export default function Sidebar({ activeTab, onTabChange, isAdmin, onSearchClick }) {
+export default function Sidebar({ activeTab, onTabChange, isAdmin, onSearchClick, onLogout, userName }) {
   const [openGroups, setOpenGroups] = useState(() => {
     // Open the group containing the active tab by default
     const active = NAV_GROUPS.find(g => g.tabs.some(t => t.k === activeTab));
@@ -143,6 +142,24 @@ export default function Sidebar({ activeTab, onTabChange, isAdmin, onSearchClick
           );
         })}
       </nav>
+
+      {/* Footer — pinned to bottom */}
+      <div className="sidebar-footer">
+        <button
+          className={`sidebar-footer-btn${activeTab === 'feedback' ? ' active' : ''}`}
+          onClick={() => onTabChange('feedback')}
+        >
+          <span>💡</span>
+          <span>Feature Requests</span>
+        </button>
+        {onLogout && (
+          <button className="sidebar-footer-btn sidebar-logout-btn" onClick={onLogout}>
+            <span>↩</span>
+            <span>Sign Out</span>
+            {userName && <span className="sidebar-footer-user">{userName}</span>}
+          </button>
+        )}
+      </div>
     </aside>
   );
 }
