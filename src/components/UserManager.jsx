@@ -1,5 +1,7 @@
 import { useState } from 'react';
+import bcrypt from 'bcryptjs';
 import { store } from '../utils/store';
+import { supabase } from '../utils/supabase';
 import { useAdminData } from '../utils/useAdminData';
 
 const BLANK = { id:'', name:'', username:'', password:'', email:'', location:'', role:'staff', active:true };
@@ -22,17 +24,31 @@ export default function UserManager() {
     }
     setSaving(true);
     try {
+      // Hash password if it's not already hashed
+      const hashedPassword = form.password.startsWith('$2')
+        ? form.password
+        : bcrypt.hashSync(form.password, 10);
+      const formWithHash = { ...form, password: hashedPassword };
       let updated;
       if (editing) {
-        updated = users.map(u => u.id === form.id ? { ...form } : u);
-        await store.pushLog({ user: 'jordan', action: 'edit_user', detail: `Edited ${form.username}` });
+        updated = users.map(u => u.id === formWithHash.id ? { ...formWithHash } : u);
+        await store.pushLog({ user: 'jordan', action: 'edit_user', detail: `Edited ${formWithHash.username}` });
       } else {
         if (users.find(u => u.username.toLowerCase() === form.username.toLowerCase())) {
           alert('Username already exists.'); setSaving(false); return;
         }
-        const nu = { ...form, id: `u_${Date.now()}` };
+        const nu = { ...formWithHash, id: `u_${Date.now()}` };
         updated = [...users, nu];
-        await store.pushLog({ user: 'jordan', action: 'create_user', detail: `Created ${form.username}` });
+        await store.pushLog({ user: 'jordan', action: 'create_user', detail: `Created ${formWithHash.username}` });
+        // Queue welcome email if user has an email
+        if (form.email) {
+          await supabase.from('email_queue').insert({
+            to_email: form.email,
+            to_name: form.name,
+            subject: 'Welcome to Tristar PT Reimbursement Calculator',
+            body: `Hi ${form.name},\n\nYour account has been created.\n\nUsername: ${form.username}\nPassword: ${form.password}\nLocation: ${form.location || 'Not assigned'}\n\nSign in at: https://jblack4vols.github.io/tristar-reimb-app/\n\nIf you have a Tristar Microsoft 365 account, you can also use "Sign in with Microsoft 365".\n\n— Tristar Physical Therapy`,
+          }).then(({ error }) => { if (error) console.error('Email queue error:', error); });
+        }
       }
       await store.setUsers(updated);
       setUsers(updated);

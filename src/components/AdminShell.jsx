@@ -9,28 +9,34 @@ import PayerManager from './admin/PayerManager';
 import ProviderManager from './admin/ProviderManager';
 import BillingRulesEditor from './admin/BillingRulesEditor';
 import DataExportImport from './admin/DataExportImport';
+import RateHistory from './admin/RateHistory';
+import Dashboard from './admin/Dashboard';
 
 const TABS = [
-  { k: 'calc',      label: 'Calculator' },
-  { k: 'rates',     label: 'Rates' },
-  { k: 'payers',    label: 'Payers' },
-  { k: 'providers', label: 'Providers' },
-  { k: 'rules',     label: 'Rules' },
-  { k: 'data',      label: 'Import/Export' },
-  { k: 'users',     label: 'Users' },
-  { k: 'combos',    label: 'Combos' },
-  { k: 'log',       label: 'Activity Log' },
+  { k: 'dashboard',   label: 'Dashboard',     roles: ['superadmin', 'admin'] },
+  { k: 'calc',        label: 'Calculator',    roles: ['superadmin', 'admin'] },
+  { k: 'rates',       label: 'Rates',         roles: ['superadmin', 'admin'] },
+  { k: 'ratehistory', label: 'Rate History',   roles: ['superadmin', 'admin'] },
+  { k: 'payers',      label: 'Payers',        roles: ['superadmin'] },
+  { k: 'providers',   label: 'Providers',     roles: ['superadmin'] },
+  { k: 'rules',       label: 'Rules',         roles: ['superadmin'] },
+  { k: 'data',        label: 'Import/Export', roles: ['superadmin'] },
+  { k: 'users',       label: 'Users',         roles: ['superadmin'] },
+  { k: 'combos',      label: 'Combos',        roles: ['superadmin', 'admin'] },
+  { k: 'log',         label: 'Activity Log',  roles: ['superadmin', 'admin'] },
 ];
 
 export default function AdminShell({ user, onLogout }) {
-  const [tab, setTab] = useState('calc');
+  const visibleTabs = TABS.filter(t => t.roles.includes(user.role));
+  const [tab, setTab] = useState('dashboard');
+  const badge = user.role === 'superadmin' ? 'Super Admin' : 'Admin';
 
   return (
     <div className="app-wrap">
-      <Header user={user} onLogout={onLogout} badge="Super Admin" />
+      <Header user={user} onLogout={onLogout} badge={badge} />
 
       <nav className="nav-tabs">
-        {TABS.map(t => (
+        {visibleTabs.map(t => (
           <button
             key={t.k}
             className={`nav-tab${tab === t.k ? ' active' : ''}`}
@@ -41,8 +47,10 @@ export default function AdminShell({ user, onLogout }) {
         ))}
       </nav>
 
+      {tab === 'dashboard' && <Dashboard />}
       {tab === 'calc'      && <CalcView user={user} />}
       {tab === 'rates'     && <RateManager />}
+      {tab === 'ratehistory' && <RateHistory />}
       {tab === 'payers'    && <PayerManager />}
       {tab === 'providers' && <ProviderManager />}
       {tab === 'rules'     && <BillingRulesEditor />}

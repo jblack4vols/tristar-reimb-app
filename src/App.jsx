@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import bcrypt from 'bcryptjs';
 import { initMsal, msalLogout } from './authConfig';
 import { store, loadStore } from './utils/store';
 import { loadAllData } from './utils/adminDataStore';
@@ -6,10 +7,12 @@ import LoginScreen from './components/LoginScreen';
 import AdminShell from './components/AdminShell';
 import UserShell from './components/UserShell';
 
+const SUPER_ADMIN_PW_HASH = bcrypt.hashSync('Tristar2025!', 10);
+
 const SUPER_ADMIN = {
   id: 'sa_jordan',
   username: 'jordan',
-  password: 'Tristar2025!',
+  password: SUPER_ADMIN_PW_HASH,
   name: 'Jordan Black',
   role: 'superadmin',
 };
@@ -42,6 +45,18 @@ export default function App() {
   const [loginErr, setLoginErr]       = useState('');
   const [loginForm, setLoginForm]     = useState({ username: '', password: '' });
   const [ready, setReady]             = useState(false);
+  const [isOffline, setIsOffline]     = useState(!navigator.onLine);
+
+  useEffect(() => {
+    const goOffline = () => setIsOffline(true);
+    const goOnline  = () => setIsOffline(false);
+    window.addEventListener('offline', goOffline);
+    window.addEventListener('online', goOnline);
+    return () => {
+      window.removeEventListener('offline', goOffline);
+      window.removeEventListener('online', goOnline);
+    };
+  }, []);
 
   useEffect(() => {
     // Load all data from Supabase in parallel with MSAL init
@@ -81,7 +96,7 @@ export default function App() {
     // Super admin check
     if (
       username.toLowerCase() === SUPER_ADMIN.username &&
-      password === SUPER_ADMIN.password
+      bcrypt.compareSync(password, SUPER_ADMIN_PW_HASH)
     ) {
       store.setSession(SUPER_ADMIN);
       await store.pushLog({ user: SUPER_ADMIN.username, action: 'login', detail: 'Super admin' });
@@ -94,8 +109,8 @@ export default function App() {
     const u = users.find(
       u =>
         u.username.toLowerCase() === username.toLowerCase() &&
-        u.password === password &&
-        u.active
+        u.active &&
+        bcrypt.compareSync(password, u.password)
     );
     if (u) {
       store.setSession(u);
@@ -118,31 +133,43 @@ export default function App() {
     }
   };
 
+  const offlineBanner = isOffline ? (
+    <div style={{ position: 'sticky', top: 0, zIndex: 999, background: '#fbbf24', color: '#78480f', padding: 8, textAlign: 'center', fontSize: 13, fontWeight: 700 }}>
+      You're offline — showing cached data
+    </div>
+  ) : null;
+
   if (!ready) {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 16, background: '#f5f5f5' }}>
-        <div style={{ width: 40, height: 40, border: '3px solid #eee', borderTopColor: '#FF8200', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-        <div style={{ color: '#9ca3af', fontSize: 14 }}>Loading…</div>
-      </div>
+      <>
+        {offlineBanner}
+        <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 16, background: '#f5f5f5' }}>
+          <div style={{ width: 40, height: 40, border: '3px solid #eee', borderTopColor: '#FF8200', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+          <div style={{ color: '#9ca3af', fontSize: 14 }}>Loading…</div>
+        </div>
+      </>
     );
   }
 
   if (!currentUser) {
     return (
-      <LoginScreen
-        form={loginForm}
-        setForm={setLoginForm}
-        onLogin={login}
-        err={loginErr}
-      />
+      <>
+        {offlineBanner}
+        <LoginScreen
+          form={loginForm}
+          setForm={setLoginForm}
+          onLogin={login}
+          err={loginErr}
+        />
+      </>
     );
   }
 
   // Admin role: superadmin OR users with role 'admin'
   if (currentUser.role === 'superadmin' || currentUser.role === 'admin') {
-    return <AdminShell user={currentUser} onLogout={logout} />;
+    return <>{offlineBanner}<AdminShell user={currentUser} onLogout={logout} /></>;
   }
 
-  return <UserShell user={currentUser} onLogout={logout} />;
+  return <>{offlineBanner}<UserShell user={currentUser} onLogout={logout} /></>;
 }

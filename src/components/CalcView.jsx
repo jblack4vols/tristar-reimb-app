@@ -2,6 +2,7 @@ import { useState, useMemo, useRef } from 'react';
 import { useAdminData } from '../utils/useAdminData';
 import { PT_EVALS as DEFAULT_PT_EVALS, OT_EVALS as DEFAULT_OT_EVALS } from '../data/codes';
 import { store } from '../utils/store';
+import PdfExport from './PdfExport';
 
 export default function CalcView({ user }) {
   const { loading: dataLoading, rates: RATES, payers: PAYERS, contractPayers: CONTRACT_PAYERS,
@@ -20,6 +21,8 @@ export default function CalcView({ user }) {
   const [showSave, setShowSave]       = useState(false);
   const [comboName, setComboName]     = useState('');
   const [toast, setToast]             = useState('');
+  const [projVisits, setProjVisits]   = useState(1);
+  const [visitsPerWeek, setVisitsPerWeek] = useState(0);
   const toastTimer = useRef(null);
 
   const showToast = msg => {
@@ -58,6 +61,18 @@ export default function CalcView({ user }) {
   );
 
   const toggle = c => setCodes(p => p.includes(c) ? p.filter(x => x !== c) : [...p, c]);
+
+  const favCodes = useMemo(() => {
+    if (!provider) return [];
+    const combos = store.getCombos().filter(cb => cb.provider === provider);
+    if (!combos.length) return [];
+    const freq = {};
+    combos.forEach(cb => (cb.codes || []).forEach(c => { freq[c] = (freq[c] || 0) + 1; }));
+    return Object.entries(freq)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([c]) => c);
+  }, [provider]);
 
   const saveCombo = async () => {
     const n = comboName.trim();
@@ -131,6 +146,31 @@ export default function CalcView({ user }) {
         </div>
       )}
 
+      {/* Favorite codes — Quick Picks */}
+      {favCodes.length > 0 && (
+        <div style={{ marginBottom: 12 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 6 }}>
+            Quick Pick
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            {favCodes.map(c => (
+              <span
+                key={c}
+                className="chip"
+                onClick={() => toggle(c)}
+                style={{
+                  cursor: 'pointer',
+                  background: codes.includes(c) ? '#FF8200' : undefined,
+                  color: codes.includes(c) ? '#fff' : undefined,
+                }}
+              >
+                ⭐ {c}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Billing rules */}
       {rules.length > 0 && (
         <div className="alert-warning">
@@ -194,7 +234,19 @@ export default function CalcView({ user }) {
           {codes.length > 0 && (
             <div style={{ marginBottom: 14 }}>
               {!showSave
-                ? <button className="btn btn-ghost btn-sm" onClick={() => setShowSave(true)}>★ Save this combo</button>
+                ? <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                    <button className="btn btn-ghost btn-sm" onClick={() => setShowSave(true)}>★ Save this combo</button>
+                    {payer && (
+                      <PdfExport
+                        codes={codes}
+                        payer={payer}
+                        provider={provider}
+                        total={total}
+                        rates={RATES}
+                        codeLabels={CODE_LABELS}
+                      />
+                    )}
+                  </div>
                 : <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
                     <input
                       autoFocus
@@ -283,6 +335,70 @@ export default function CalcView({ user }) {
               </div>
             )}
           </div>
+
+          {/* Multi-Visit Projections */}
+          {codes.length > 0 && payer && total > 0 && (
+            <div className="card-surface" style={{ marginTop: 14 }}>
+              <div className="field-label" style={{ marginBottom: 10, fontSize: 14 }}>Multi-Visit Projections</div>
+
+              <div className="grid-2" style={{ marginBottom: 14 }}>
+                <div>
+                  <label className="field-label">Number of Visits</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="30"
+                    inputMode="numeric"
+                    value={projVisits}
+                    onChange={e => setProjVisits(Math.max(1, Math.min(30, parseInt(e.target.value) || 1)))}
+                  />
+                </div>
+                <div>
+                  <label className="field-label">Visits per Week</label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="7"
+                    inputMode="numeric"
+                    value={visitsPerWeek}
+                    onChange={e => setVisitsPerWeek(Math.max(0, Math.min(7, parseInt(e.target.value) || 0)))}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 }}>
+                <div>
+                  <div className="total-label">Per Visit</div>
+                  <div className="total-amount" style={{ color: '#FF8200' }}>
+                    ${total.toFixed(2)}
+                  </div>
+                </div>
+                <div>
+                  <div className="total-label">Projected Total ({projVisits} visit{projVisits !== 1 ? 's' : ''})</div>
+                  <div className="total-amount" style={{ color: '#FF8200' }}>
+                    ${(total * projVisits).toFixed(2)}
+                  </div>
+                </div>
+              </div>
+
+              {visitsPerWeek > 0 && (
+                <div style={{ borderTop: '1.5px solid #e5e7eb', marginTop: 14, paddingTop: 14, display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+                  <div>
+                    <div className="total-label">Weekly ({visitsPerWeek}×/wk)</div>
+                    <div className="total-amount" style={{ color: '#FF8200' }}>
+                      ${(total * visitsPerWeek).toFixed(2)}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="total-label">Monthly (×4.33 wks)</div>
+                    <div className="total-amount" style={{ color: '#FF8200' }}>
+                      ${(total * visitsPerWeek * 4.33).toFixed(2)}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </>
       ) : (
         /* Contract mode */

@@ -556,6 +556,143 @@ input:focus, select:focus { border-color: var(--orange); }
 .admin-list-item .item-name { font-weight: 700; font-size: 14px; }
 .admin-list-item .item-meta { font-size: 13px; color: #6b7280; }
 
+/* ── Dark mode ── */
+[data-theme="dark"] {
+  --bg: #1a1a1a;
+  --bg-card: #2a2a2a;
+  --bg-surface: #333;
+  --text: #e5e5e5;
+  --text-muted: #9ca3af;
+  --border: #444;
+}
+
+[data-theme="dark"] body {
+  background: #1a1a1a;
+  color: #e5e5e5;
+}
+
+[data-theme="dark"] .card,
+[data-theme="dark"] .user-card,
+[data-theme="dark"] .log-entry {
+  background: #2a2a2a;
+  border-color: #444;
+}
+
+[data-theme="dark"] .card-surface,
+[data-theme="dark"] .reminders {
+  background: #333;
+}
+
+[data-theme="dark"] input:not([type="checkbox"]),
+[data-theme="dark"] select,
+[data-theme="dark"] textarea {
+  background: #333;
+  color: #e5e5e5;
+  border-color: #555;
+}
+
+[data-theme="dark"] .code-btn {
+  background: #2a2a2a;
+  border-color: #444;
+  color: #e5e5e5;
+}
+
+[data-theme="dark"] .code-btn.active {
+  border-color: var(--orange);
+  background: var(--orange-light);
+}
+
+[data-theme="dark"] .mode-btn.active {
+  background: #444;
+  color: #e5e5e5;
+}
+
+[data-theme="dark"] .nav-tab {
+  border-color: #444;
+  color: #9ca3af;
+}
+
+[data-theme="dark"] .login-page {
+  background: #1a1a1a;
+}
+
+[data-theme="dark"] .rate-table th {
+  background: #333;
+  color: #9ca3af;
+}
+
+[data-theme="dark"] .rate-table td:first-child,
+[data-theme="dark"] .rate-table th:first-child {
+  background: #2a2a2a;
+}
+
+[data-theme="dark"] .rate-table th:first-child {
+  background: #333;
+}
+
+[data-theme="dark"] .badge-muted {
+  background: #444 !important;
+  color: #9ca3af !important;
+  border-color: #555 !important;
+}
+
+[data-theme="dark"] .btn-muted {
+  background: #333;
+  color: #9ca3af;
+  border-color: #555;
+}
+
+[data-theme="dark"] .section-head,
+[data-theme="dark"] .user-name,
+[data-theme="dark"] .login-title {
+  color: #e5e5e5;
+}
+
+[data-theme="dark"] .mode-toggle {
+  background: #333;
+}
+
+[data-theme="dark"] .mode-btn {
+  color: #9ca3af;
+}
+
+[data-theme="dark"] .divider-line {
+  background: #444;
+}
+
+[data-theme="dark"] .breakdown-row {
+  border-bottom-color: #444;
+}
+
+[data-theme="dark"] .rate-table th,
+[data-theme="dark"] .rate-table td {
+  border-color: #444;
+}
+
+[data-theme="dark"] .rate-table-wrap {
+  border-color: #444;
+}
+
+[data-theme="dark"] .admin-list-item {
+  background: #2a2a2a;
+  border-color: #444;
+}
+
+[data-theme="dark"] .ms-btn {
+  background: #2a2a2a;
+  color: #e5e5e5;
+  border-color: #555;
+}
+
+[data-theme="dark"] .ms-btn:hover {
+  background: #333;
+}
+
+[data-theme="dark"] .rate-table tbody tr:hover td,
+[data-theme="dark"] .rate-table tbody tr:hover td:first-child {
+  background: #3a3520;
+}
+
 /* ── Responsive ── */
 @media (max-width: 480px) {
   .grid-2       { grid-template-columns: 1fr; }

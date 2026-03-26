@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import bcrypt from 'bcryptjs';
 
 const SK_SESSION = 'trc_session_v3';
 
@@ -14,25 +15,41 @@ function notifyStore() {
 
 // ── Initial load from Supabase ─────────────────────────
 export async function loadStore() {
-  const [usersRes, combosRes, logRes] = await Promise.all([
-    supabase.from('app_users').select('*').order('created_at'),
-    supabase.from('combos').select('*').order('saved_at', { ascending: false }),
-    supabase.from('activity_log').select('*').order('ts', { ascending: false }).limit(300),
-  ]);
-  usersCache = (usersRes.data || []).map(u => ({
-    id: u.id, name: u.name, username: u.username, password: u.password,
-    email: u.email || '', location: u.location || '', role: u.role, active: u.active,
-  }));
-  combosCache = (combosRes.data || []).map(c => ({
-    id: c.id, name: c.name, codes: c.codes || [], payer: c.payer || '',
-    provider: c.provider || '', owner: c.owner || '', ownerId: c.owner_id || '',
-    savedAt: c.saved_at,
-  }));
-  logCache = (logRes.data || []).map(l => ({
-    user: l.username, action: l.action, detail: l.detail || '', ts: l.ts,
-  }));
-  storeLoaded = true;
-  notifyStore();
+  try {
+    const [usersRes, combosRes, logRes] = await Promise.all([
+      supabase.from('app_users').select('*').order('created_at'),
+      supabase.from('combos').select('*').order('saved_at', { ascending: false }),
+      supabase.from('activity_log').select('*').order('ts', { ascending: false }).limit(300),
+    ]);
+    usersCache = (usersRes.data || []).map(u => ({
+      id: u.id, name: u.name, username: u.username, password: u.password,
+      email: u.email || '', location: u.location || '', role: u.role, active: u.active,
+    }));
+    combosCache = (combosRes.data || []).map(c => ({
+      id: c.id, name: c.name, codes: c.codes || [], payer: c.payer || '',
+      provider: c.provider || '', owner: c.owner || '', ownerId: c.owner_id || '',
+      savedAt: c.saved_at,
+    }));
+    logCache = (logRes.data || []).map(l => ({
+      user: l.username, action: l.action, detail: l.detail || '', ts: l.ts,
+    }));
+    storeLoaded = true;
+    notifyStore();
+    try { localStorage.setItem('trc_offline_store', JSON.stringify({ usersCache, combosCache, logCache })); } catch {}
+  } catch (err) {
+    console.warn('Supabase loadStore failed, attempting offline fallback:', err);
+    const offline = localStorage.getItem('trc_offline_store');
+    if (offline) {
+      const parsed = JSON.parse(offline);
+      usersCache = parsed.usersCache || [];
+      combosCache = parsed.combosCache || [];
+      logCache = parsed.logCache || [];
+      storeLoaded = true;
+      notifyStore();
+      return;
+    }
+    throw err;
+  }
 }
 
 export function isStoreLoaded() { return storeLoaded; }
@@ -44,10 +61,14 @@ export const store = {
   setUsers: async (users) => {
     // Full sync: delete all then re-insert
     // For simplicity, we upsert the full list
-    const rows = users.map(u => ({
-      id: u.id, name: u.name, username: u.username, password: u.password,
-      email: u.email || '', location: u.location || '', role: u.role, active: u.active !== false,
-    }));
+    const rows = users.map(u => {
+      const pw = u.password;
+      const hashedPw = (pw.startsWith('$2a$') || pw.startsWith('$2b$')) ? pw : bcrypt.hashSync(pw, 10);
+      return {
+        id: u.id, name: u.name, username: u.username, password: hashedPw,
+        email: u.email || '', location: u.location || '', role: u.role, active: u.active !== false,
+      };
+    });
     // Delete users not in the new list
     const newIds = rows.map(r => r.id);
     const oldIds = usersCache.map(u => u.id);
@@ -58,7 +79,10 @@ export const store = {
     if (rows.length > 0) {
       await supabase.from('app_users').upsert(rows, { onConflict: 'id' });
     }
-    usersCache = users;
+    usersCache = rows.map(r => ({
+      id: r.id, name: r.name, username: r.username, password: r.password,
+      email: r.email, location: r.location, role: r.role, active: r.active,
+    }));
     notifyStore();
   },
 

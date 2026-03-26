@@ -8,6 +8,9 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="Tristar PT Calc" />
+    <link rel="manifest" href="/tristar-reimb-app/manifest.json" />
+    <link rel="icon" type="image/svg+xml" href="/tristar-reimb-app/icon.svg" />
+    <link rel="apple-touch-icon" href="/tristar-reimb-app/icon.svg" />
     <title>Tristar PT — Reimbursement Calculator</title>
     <style>
       *, *::before, *::after { box-sizing: border-box; }
@@ -25,5 +28,15 @@
       </div>
     </div>
     <script type="module" src="/src/index.jsx"></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker
+            .register('/tristar-reimb-app/sw.js', { scope: '/tristar-reimb-app/' })
+            .then((reg) => console.log('[App] Service Worker registered, scope:', reg.scope))
+            .catch((err) => console.warn('[App] Service Worker registration failed:', err));
+        });
+      }
+    </script>
   </body>
 </html>

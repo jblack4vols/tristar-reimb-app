@@ -11,64 +11,77 @@ function notify() {
 
 // ── Load all data from Supabase into cache ─────────────
 export async function loadAllData() {
-  const [ratesRes, payersRes, contractRes, providersRes, rulesRes, labelsRes, groupsRes] =
-    await Promise.all([
-      supabase.from('rates').select('*'),
-      supabase.from('payers').select('*').order('sort_order'),
-      supabase.from('contract_payers').select('*').order('name'),
-      supabase.from('providers').select('*').order('location, name'),
-      supabase.from('billing_rules').select('*').order('payer, sort_order'),
-      supabase.from('code_labels').select('*'),
-      supabase.from('code_groups').select('*').order('sort_order'),
-    ]);
+  try {
+    const [ratesRes, payersRes, contractRes, providersRes, rulesRes, labelsRes, groupsRes] =
+      await Promise.all([
+        supabase.from('rates').select('*'),
+        supabase.from('payers').select('*').order('sort_order'),
+        supabase.from('contract_payers').select('*').order('name'),
+        supabase.from('providers').select('*').order('location, name'),
+        supabase.from('billing_rules').select('*').order('payer, sort_order'),
+        supabase.from('code_labels').select('*'),
+        supabase.from('code_groups').select('*').order('sort_order'),
+      ]);
 
-  // Build rates object: { code: { payer: amount } }
-  const rates = {};
-  for (const r of ratesRes.data || []) {
-    if (!rates[r.code]) rates[r.code] = {};
-    rates[r.code][r.payer] = Number(r.amount);
+    // Build rates object: { code: { payer: amount } }
+    const rates = {};
+    for (const r of ratesRes.data || []) {
+      if (!rates[r.code]) rates[r.code] = {};
+      rates[r.code][r.payer] = Number(r.amount);
+    }
+
+    // Payer names in order
+    const payers = (payersRes.data || []).map(p => p.name);
+
+    // Contract payers: { name: rate }
+    const contractPayers = {};
+    for (const cp of contractRes.data || []) {
+      contractPayers[cp.name] = Number(cp.rate);
+    }
+
+    // Providers map: { location: [names] }
+    const providersMap = {};
+    for (const p of providersRes.data || []) {
+      if (!providersMap[p.location]) providersMap[p.location] = [];
+      providersMap[p.location].push(p.name);
+    }
+
+    // Billing rules: { payer: [rules] }
+    const billingRules = {};
+    for (const r of rulesRes.data || []) {
+      if (!billingRules[r.payer]) billingRules[r.payer] = [];
+      billingRules[r.payer].push(r.rule_text);
+    }
+
+    // Code labels: { code: description }
+    const codeLabels = {};
+    for (const cl of labelsRes.data || []) {
+      codeLabels[cl.code] = cl.description;
+    }
+
+    // Code groups
+    const codeGroups = (groupsRes.data || []).map(g => ({
+      key: g.group_key,
+      label: g.label,
+      codes: g.codes || [],
+    }));
+
+    cache = { rates, payers, contractPayers, providersMap, billingRules, codeLabels, codeGroups };
+    loaded = true;
+    notify();
+    try { localStorage.setItem('trc_offline_data', JSON.stringify(cache)); } catch {}
+    return cache;
+  } catch (err) {
+    console.warn('Supabase loadAllData failed, attempting offline fallback:', err);
+    const offline = localStorage.getItem('trc_offline_data');
+    if (offline) {
+      cache = JSON.parse(offline);
+      loaded = true;
+      notify();
+      return cache;
+    }
+    throw err;
   }
-
-  // Payer names in order
-  const payers = (payersRes.data || []).map(p => p.name);
-
-  // Contract payers: { name: rate }
-  const contractPayers = {};
-  for (const cp of contractRes.data || []) {
-    contractPayers[cp.name] = Number(cp.rate);
-  }
-
-  // Providers map: { location: [names] }
-  const providersMap = {};
-  for (const p of providersRes.data || []) {
-    if (!providersMap[p.location]) providersMap[p.location] = [];
-    providersMap[p.location].push(p.name);
-  }
-
-  // Billing rules: { payer: [rules] }
-  const billingRules = {};
-  for (const r of rulesRes.data || []) {
-    if (!billingRules[r.payer]) billingRules[r.payer] = [];
-    billingRules[r.payer].push(r.rule_text);
-  }
-
-  // Code labels: { code: description }
-  const codeLabels = {};
-  for (const cl of labelsRes.data || []) {
-    codeLabels[cl.code] = cl.description;
-  }
-
-  // Code groups
-  const codeGroups = (groupsRes.data || []).map(g => ({
-    key: g.group_key,
-    label: g.label,
-    codes: g.codes || [],
-  }));
-
-  cache = { rates, payers, contractPayers, providersMap, billingRules, codeLabels, codeGroups };
-  loaded = true;
-  notify();
-  return cache;
 }
 
 export function isLoaded() { return loaded; }
@@ -92,18 +105,36 @@ export function getAllProviders() {
 
 // ── Rate mutations ─────────────────────────────────────
 
-export async function setRate(code, payer, value) {
+export async function setRate(code, payer, value, changedBy = '') {
   const amount = Number(value) || 0;
+  // Read old value from cache before updating
+  const oldAmount = cache.rates[code]?.[payer] ?? null;
   const { error } = await supabase
     .from('rates')
     .upsert({ code, payer, amount }, { onConflict: 'code,payer' });
   if (error) throw error;
+  // Log the rate change
+  await supabase.from('rate_changes').insert({
+    code,
+    payer,
+    old_amount: oldAmount,
+    new_amount: amount,
+    changed_by: changedBy,
+  });
   if (!cache.rates[code]) cache.rates[code] = {};
   cache.rates[code][payer] = amount;
   notify();
 }
 
-export async function setRateBulk(code, payerRates) {
+export async function setRateBulk(code, payerRates, changedBy = '') {
+  // Capture old values before updating
+  const changeRows = Object.entries(payerRates).map(([payer, amount]) => ({
+    code,
+    payer,
+    old_amount: cache.rates[code]?.[payer] ?? null,
+    new_amount: Number(amount) || 0,
+    changed_by: changedBy,
+  }));
   const rows = Object.entries(payerRates).map(([payer, amount]) => ({
     code, payer, amount: Number(amount) || 0,
   }));
@@ -111,6 +142,10 @@ export async function setRateBulk(code, payerRates) {
     .from('rates')
     .upsert(rows, { onConflict: 'code,payer' });
   if (error) throw error;
+  // Log all rate changes
+  if (changeRows.length > 0) {
+    await supabase.from('rate_changes').insert(changeRows);
+  }
   if (!cache.rates[code]) cache.rates[code] = {};
   for (const [p, a] of Object.entries(payerRates)) {
     cache.rates[code][p] = Number(a) || 0;
