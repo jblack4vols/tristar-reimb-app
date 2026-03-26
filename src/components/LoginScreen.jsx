@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { msalLogin } from '../authConfig';
 import { store } from '../utils/store';
 
-const LOGO = 'https://tristarpt.com/wp-content/uploads/2021/01/tristar-logo.png';
+const LOGO = 'https://assets.cdn.filesafe.space/4OhLjdxKCuBxvgs4TpUU/media/6630c406f4d5b72faba066f0.jpeg';
 
 const MsIcon = () => (
   <svg width="20" height="20" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -44,7 +44,7 @@ export default function LoginScreen({ form, setForm, onLogin, err }) {
             <img
               src={LOGO}
               alt="Tristar Physical Therapy"
-              onError={e => { e.target.style.display = 'none'; }}
+              onError={e => { e.target.style.opacity = '0'; }}
             />
             <div className="login-title">Forgot Password</div>
             <div className="login-sub">
@@ -108,7 +108,7 @@ export default function LoginScreen({ form, setForm, onLogin, err }) {
           <img
             src={LOGO}
             alt="Tristar Physical Therapy"
-            onError={e => { e.target.style.display = 'none'; }}
+            onError={e => { e.target.style.opacity = '0'; }}
           />
           <div className="login-title">Reimbursement Calculator</div>
           <div className="login-sub">Sign in to continue</div>

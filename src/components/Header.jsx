@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-const LOGO = 'https://tristarpt.com/wp-content/uploads/2021/01/tristar-logo.png';
+const LOGO = 'https://assets.cdn.filesafe.space/4OhLjdxKCuBxvgs4TpUU/media/6630c406f4d5b72faba066f0.jpeg';
 
 export default function Header({ user, onLogout, badge }) {
   const [theme, setTheme] = useState(() => {
@@ -23,7 +23,7 @@ export default function Header({ user, onLogout, badge }) {
           src={LOGO}
           alt="Tristar Physical Therapy"
           className="header-logo"
-          onError={e => { e.target.style.display = 'none'; }}
+          onError={e => { e.target.style.opacity = '0'; }}
         />
         <div>
           <div className="header-org">Tristar Physical Therapy</div>

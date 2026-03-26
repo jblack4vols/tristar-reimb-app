@@ -80,12 +80,20 @@ export default function HomePage({ user, onNavigate, recentPatients = [] }) {
   return (
     <div style={{ padding: '8px 0' }}>
 
-      {/* ── Welcome ── */}
-      <div style={{ marginBottom: 24 }}>
-        <h2 className="section-head" style={{ marginBottom: 6 }}>
-          Welcome back, {user?.name || 'Therapist'}
-        </h2>
-        {user?.location && <span className="badge">{user.location}</span>}
+      {/* ── Welcome with Logo ── */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24 }}>
+        <img
+          src="https://assets.cdn.filesafe.space/4OhLjdxKCuBxvgs4TpUU/media/6630c406f4d5b72faba066f0.jpeg"
+          alt="Tristar Physical Therapy"
+          style={{ width: 72, height: 72, objectFit: 'contain' }}
+          onError={e => { e.target.style.opacity = '0'; }}
+        />
+        <div>
+          <h2 className="section-head" style={{ marginBottom: 4 }}>
+            Welcome back, {user?.name || 'Therapist'}
+          </h2>
+          {user?.location && <span className="badge">{user.location}</span>}
+        </div>
       </div>
 
       {/* ── Quick Actions ── */}
