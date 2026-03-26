@@ -21,9 +21,9 @@ body {
 #root { min-height: 100vh; }
 
 .app-wrap {
-  max-width: 680px;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 16px 16px 100px;
+  padding: 16px 24px 100px;
 }
 
 /* ── Inputs & Selects ── */
@@ -196,9 +196,9 @@ input:focus, select:focus { border-color: var(--orange); }
 /* ── Code grid ── */
 .code-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   gap: 8px;
-  max-height: 260px;
+  max-height: 400px;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   margin-bottom: 14px;
@@ -484,7 +484,7 @@ input:focus, select:focus { border-color: var(--orange); }
   border: 1.5px solid #e5e7eb;
   border-radius: var(--radius);
   margin-bottom: 16px;
-  max-height: 520px;
+  max-height: 700px;
   overflow-y: auto;
 }
 .rate-table {
