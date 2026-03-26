@@ -3,6 +3,7 @@ import { supabase } from '../utils/supabase';
 import { encryptPHI, decryptPHI } from '../utils/crypto';
 import { useAdminData } from '../utils/useAdminData';
 import { store } from '../utils/store';
+import BillingAlerts from './BillingAlerts';
 
 const TODAY = new Date().toISOString().split('T')[0];
 
@@ -624,6 +625,17 @@ export default function NewVisitFlow({ user }) {
           }}>4</span>
           <span className="section-head" style={{ marginBottom: 0 }}>Summary & Save</span>
         </div>
+
+        {/* Billing optimization alerts */}
+        {codes.length > 0 && payer && (
+          <BillingAlerts
+            codes={codes}
+            payer={payer}
+            rates={rates}
+            codeLabels={codeLabels}
+            onSwapCode={(oldC, newC) => setCodes(prev => prev.map(c => c === oldC ? newC : c))}
+          />
+        )}
 
         <div className="card" style={{
           borderColor: (selectedPatient && payer && codes.length > 0) ? '#FF8200' : '#e5e7eb',

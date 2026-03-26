@@ -5,6 +5,7 @@ import { store } from '../utils/store';
 import { supabase } from '../utils/supabase';
 import { encryptPHI } from '../utils/crypto';
 import EightMinuteRule from './EightMinuteRule';
+import BillingAlerts from './BillingAlerts';
 import PdfExport from './PdfExport';
 
 export default function CalcView({ user, templateCodes, selectedPatient, onClearTemplate, onClearPatient }) {
@@ -118,6 +119,7 @@ export default function CalcView({ user, templateCodes, selectedPatient, onClear
   );
 
   const toggle = c => setCodes(p => p.includes(c) ? p.filter(x => x !== c) : [...p, c]);
+  const swapCode = (oldCode, newCode) => setCodes(p => p.map(c => c === oldCode ? newCode : c));
 
   const favCodes = useMemo(() => {
     if (!provider) return [];
@@ -355,6 +357,17 @@ export default function CalcView({ user, templateCodes, selectedPatient, onClear
                   </div>
               }
             </div>
+          )}
+
+          {/* Smart Billing Alerts */}
+          {codes.length > 0 && payer && (
+            <BillingAlerts
+              codes={codes}
+              payer={payer}
+              rates={RATES}
+              codeLabels={CODE_LABELS}
+              onSwapCode={swapCode}
+            />
           )}
 
           {/* Result card */}
