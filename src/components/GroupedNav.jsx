@@ -4,7 +4,10 @@ const NAV_GROUPS = [
   {
     label: 'Home',
     icon: '🏠',
-    tabs: [{ k: 'home', label: 'Home' }],
+    tabs: [
+      { k: 'home', label: 'Home' },
+      { k: 'feedback', label: 'Feature Requests' },
+    ],
   },
   {
     label: 'Clinical',

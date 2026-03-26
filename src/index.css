@@ -385,7 +385,8 @@ input:focus, select:focus { border-color: var(--orange); }
 
 /* ── App header ── */
 .app-header {
-  background: var(--orange);
+  background: #ffead5;
+  border: 1.5px solid #f5d0a9;
   border-radius: 14px;
   padding: 14px 16px;
   margin-bottom: 16px;
@@ -396,16 +397,16 @@ input:focus, select:focus { border-color: var(--orange); }
 }
 .header-left  { display: flex; align-items: center; gap: 12px; min-width: 0; }
 .header-logo  { width: 48px; height: 48px; object-fit: contain; border-radius: 8px; background: #fff; padding: 4px; flex-shrink: 0; }
-.header-org   { font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.65); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 1px; }
-.header-title { font-size: 17px; font-weight: 700; color: #fff; letter-spacing: -0.01em; line-height: 1.2; }
+.header-org   { font-size: 11px; font-weight: 700; color: #b06a1a; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 1px; }
+.header-title { font-size: 17px; font-weight: 700; color: #1a1a1a; letter-spacing: -0.01em; line-height: 1.2; }
 .header-right { text-align: right; flex-shrink: 0; }
-.header-badge { display: inline-block; background: rgba(255,255,255,0.2); border-radius: 20px; padding: 2px 10px; font-size: 11px; font-weight: 700; color: #fff; margin-bottom: 3px; }
-.header-name  { font-size: 13px; color: rgba(255,255,255,0.85); font-weight: 600; white-space: nowrap; }
+.header-badge { display: inline-block; background: var(--orange); border-radius: 20px; padding: 2px 10px; font-size: 11px; font-weight: 700; color: #fff; margin-bottom: 3px; }
+.header-name  { font-size: 13px; color: #6b7280; font-weight: 600; white-space: nowrap; }
 .header-signout {
   background: transparent;
-  border: 1px solid rgba(255,255,255,0.45);
+  border: 1px solid #d1a76a;
   border-radius: 6px;
-  color: rgba(255,255,255,0.9);
+  color: #8b5a1a;
   font-size: 11px;
   padding: 3px 10px;
   cursor: pointer;
@@ -814,6 +815,11 @@ input:focus, select:focus { border-color: var(--orange); }
 [data-theme="dark"] .nav-group-btn:hover { background: #333; border-color: #555; }
 [data-theme="dark"] .step-label { color: #e5e5e5; }
 [data-theme="dark"] .action-card { border-color: #444; }
+[data-theme="dark"] .app-header { background: #2a2218; border-color: #4a3a28; }
+[data-theme="dark"] .header-org { color: #c89050; }
+[data-theme="dark"] .header-title { color: #e5e5e5; }
+[data-theme="dark"] .header-name { color: #9ca3af; }
+[data-theme="dark"] .header-signout { border-color: #5a4a38; color: #c89050; }
 
 /* ── Responsive ── */
 

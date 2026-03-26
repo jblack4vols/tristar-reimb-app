@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Header from './Header';
 import GroupedNav from './GroupedNav';
+import FeatureRequests from './FeatureRequests';
 import GlobalSearch from './GlobalSearch';
 import OnboardingTour from './OnboardingTour';
 import HomePage from './HomePage';
@@ -106,6 +107,7 @@ export default function AdminShell({ user, onLogout }) {
       {tab === 'users'        && <UserManager />}
       {tab === 'combos'       && <AdminCombos />}
       {tab === 'log'          && <ActivityLog />}
+      {tab === 'feedback'     && <FeatureRequests user={user} isAdmin={true} />}
     </div>
   );
 }

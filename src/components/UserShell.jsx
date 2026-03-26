@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import Header from './Header';
 import GroupedNav from './GroupedNav';
 import GlobalSearch from './GlobalSearch';
+import FeatureRequests from './FeatureRequests';
 import OnboardingTour from './OnboardingTour';
 import HomePage from './HomePage';
 import NewVisitFlow from './NewVisitFlow';
@@ -71,6 +72,7 @@ export default function UserShell({ user, onLogout }) {
       {tab === 'templates' && <TreatmentTemplates user={user} onApplyTemplate={applyTemplate} />}
       {tab === 'visits'    && <VisitHistory user={user} />}
       {tab === 'combos'    && <UserCombos user={user} />}
+      {tab === 'feedback'  && <FeatureRequests user={user} />}
     </div>
   );
 }
