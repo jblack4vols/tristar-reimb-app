@@ -89,11 +89,12 @@ export default function CalcView({ user, templateCodes, selectedPatient, onClear
     setLogSaving(false);
   };
 
-  const pInfo  = useMemo(() => ALL_PROVIDERS.find(p => p.name === provider) || null, [provider]);
-  const isOT   = pInfo?.isOT || false;
+  const pInfo  = useMemo(() => (ALL_PROVIDERS || []).find(p => p.name === provider) || null, [provider, ALL_PROVIDERS]);
+  const discipline = pInfo?.discipline || 'PT';
+  const isOT   = discipline === 'OT' || discipline === 'COTA';
 
   const groups = useMemo(() => [
-    { key: 'Evals', label: isOT ? 'OT Evals' : 'PT Evals', codes: isOT ? OT_EVALS : PT_EVALS },
+    { key: 'Evals', label: isOT ? 'OT Evals (OT/COTA)' : 'PT Evals (PT/PTA)', codes: isOT ? OT_EVALS : PT_EVALS },
     ...(CODE_GROUPS || []),
   ], [isOT, CODE_GROUPS]);
 
@@ -200,7 +201,12 @@ export default function CalcView({ user, templateCodes, selectedPatient, onClear
       {pInfo && (
         <div style={{ display: 'flex', gap: 6, marginBottom: 12, flexWrap: 'wrap' }}>
           <span className="badge">{pInfo.location}</span>
-          <span className="badge-muted badge">{isOT ? 'Occupational Therapy' : 'Physical Therapy'}</span>
+          <span className="badge-muted badge">{
+            discipline === 'OT' ? 'Occupational Therapist (OT)' :
+            discipline === 'COTA' ? 'Certified OT Assistant (COTA)' :
+            discipline === 'PTA' ? 'Physical Therapist Assistant (PTA)' :
+            'Physical Therapist (PT)'
+          }</span>
         </div>
       )}
 

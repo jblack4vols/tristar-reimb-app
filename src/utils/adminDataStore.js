@@ -96,10 +96,20 @@ export function getBillingRules() { return cache.billingRules || {}; }
 export function getCodeLabels() { return cache.codeLabels || {}; }
 export function getCodeGroups() { return cache.codeGroups || []; }
 
+function getDiscipline(name) {
+  if (name.includes('(COTA)')) return 'COTA';
+  if (name.includes('(OT)'))   return 'OT';
+  if (name.includes('(PTA)'))  return 'PTA';
+  return 'PT';
+}
+
 export function getAllProviders() {
   const map = getProviders();
   return Object.entries(map).flatMap(([loc, names]) =>
-    names.map(n => ({ name: n, location: loc, isOT: n.includes('(OT)') }))
+    names.map(n => {
+      const discipline = getDiscipline(n);
+      return { name: n, location: loc, isOT: discipline === 'OT' || discipline === 'COTA', discipline };
+    })
   );
 }
 

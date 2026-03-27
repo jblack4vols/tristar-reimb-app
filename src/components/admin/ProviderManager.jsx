@@ -10,7 +10,7 @@ export default function ProviderManager() {
   // Add-provider form state (per location)
   const [addingAt, setAddingAt] = useState(null);     // location key currently adding to
   const [newName, setNewName] = useState('');
-  const [newIsOT, setNewIsOT] = useState(false);
+  const [newDiscipline, setNewDiscipline] = useState('PT');
 
   // Add-location form state
   const [showAddLoc, setShowAddLoc] = useState(false);
@@ -31,7 +31,12 @@ export default function ProviderManager() {
     (providers[loc] || []).some(matchesSearch)
   );
 
-  const isOT = (name) => name.endsWith('(OT)') || name.endsWith('(OT) ');
+  const getDiscipline = (name) => {
+    if (name.includes('(COTA)')) return 'COTA';
+    if (name.includes('(OT)'))   return 'OT';
+    if (name.includes('(PTA)'))  return 'PTA';
+    return 'PT';
+  };
 
   const totalProviders = locations.reduce((n, loc) => n + (providers[loc]?.length || 0), 0);
 
@@ -39,11 +44,13 @@ export default function ProviderManager() {
   const handleAddProvider = async (location) => {
     const trimmed = newName.trim();
     if (!trimmed) { alert('Provider name is required.'); return; }
+    const fullName = newDiscipline !== 'PT' ? `${trimmed} (${newDiscipline})` : trimmed;
+    const isOT = newDiscipline === 'OT' || newDiscipline === 'COTA';
     try {
-      await ds.addProvider(location, trimmed, newIsOT);
+      await ds.addProvider(location, fullName, isOT);
       setAddingAt(null);
       setNewName('');
-      setNewIsOT(false);
+      setNewDiscipline('PT');
     } catch (err) {
       alert(`Failed to add provider: ${err.message || err}`);
     }
@@ -208,9 +215,12 @@ export default function ProviderManager() {
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
                   <span style={{ fontSize: 15 }}>{name}</span>
-                  {isOT(name) && (
-                    <span className="badge badge-muted" style={{ fontSize: 11 }}>OT</span>
-                  )}
+                  {(() => {
+                    const d = getDiscipline(name);
+                    const colors = { OT: { bg: '#dbeafe', color: '#1d4ed8' }, COTA: { bg: '#ede9fe', color: '#6d28d9' }, PTA: { bg: '#fce7f3', color: '#be185d' }, PT: { bg: '#dcfce7', color: '#15803d' } };
+                    const c = colors[d] || colors.PT;
+                    return <span className="badge" style={{ fontSize: 11, background: c.bg, color: c.color, border: 'none' }}>{d}</span>;
+                  })()}
                 </div>
                 <button className="btn btn-danger btn-sm" onClick={() => handleRemoveProvider(loc, name)}>
                   Remove
@@ -230,20 +240,18 @@ export default function ProviderManager() {
                   onKeyDown={e => e.key === 'Enter' && handleAddProvider(loc)}
                   style={{ flex: 1, minWidth: 140 }}
                 />
-                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                  <input
-                    type="checkbox"
-                    id={`ot-${loc}`}
-                    checked={newIsOT}
-                    onChange={e => setNewIsOT(e.target.checked)}
-                    style={{ width: 18, height: 18, accentColor: '#FF8200', cursor: 'pointer' }}
-                  />
-                  <label htmlFor={`ot-${loc}`} style={{ fontSize: 14, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                    OT
-                  </label>
-                </div>
+                <select
+                  value={newDiscipline}
+                  onChange={e => setNewDiscipline(e.target.value)}
+                  style={{ width: 'auto', minWidth: 70, padding: '8px 10px', fontSize: 13 }}
+                >
+                  <option value="PT">PT</option>
+                  <option value="PTA">PTA</option>
+                  <option value="OT">OT</option>
+                  <option value="COTA">COTA</option>
+                </select>
                 <button className="btn btn-primary btn-sm" onClick={() => handleAddProvider(loc)}>Add</button>
-                <button className="btn btn-muted btn-sm" onClick={() => { setAddingAt(null); setNewName(''); setNewIsOT(false); }}>Cancel</button>
+                <button className="btn btn-muted btn-sm" onClick={() => { setAddingAt(null); setNewName(''); setNewDiscipline('PT'); }}>Cancel</button>
               </div>
             ) : (
               <button
