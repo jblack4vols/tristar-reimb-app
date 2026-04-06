@@ -1,64 +1,46 @@
-// CPT code metadata: units, timing rules, and category groupings
-
-export const CODE_CATEGORIES = {
-  EVAL: 'Evaluation',
-  THERAPEUTIC: 'Therapeutic Procedure',
-  MODALITY_SUPERVISED: 'Modality – Supervised',
-  MODALITY_ATTENDED: 'Modality – Constant Attendance',
-  NEEDLING: 'Dry Needling',
-  GROUP: 'Group / Aquatic',
+export const CODE_LABELS = {
+  "DN1":"Dry Needling (1–2 muscles)","DN2":"Dry Needling (3+ muscles)",
+  "ST":"Strapping – Thorax","SSH":"Strapping – Shoulder","SE":"Strapping – Elbow",
+  "SHAND":"Strapping – Hand","SHIP":"Strapping – Hip","SK":"Strapping – Knee",
+  "SF":"Strapping – Foot/Ankle","STOE":"Strapping – Toe",
+  "CR":"Canalith Repositioning","TRX":"Traction",
+  "ES":"E-Stim (97014)","ESM":"E-Stim Medicare (G0283)",
+  "VASO":"Vasopneumatic","PB":"Paraffin Bath","IONTO":"Iontophoresis","US":"Ultrasound",
+  "TX":"Therapeutic Exercise","2TX":"Therapeutic Exercise ×2",
+  "3TX":"Therapeutic Exercise ×3","4TX":"Therapeutic Exercise ×4",
+  "NR":"Neuromuscular Re-ed","2NR":"Neuromuscular Re-ed ×2",
+  "3NR":"Neuromuscular Re-ed ×3","4NR":"Neuromuscular Re-ed ×4",
+  "AQ":"Aquatic Therapy","AQ2":"Aquatic Therapy ×2","AQ3":"Aquatic Therapy ×3",
+  "AQ4":"Aquatic Therapy ×4","AQ5":"Aquatic Therapy ×5",
+  "GT":"Gait Training","2GT":"Gait Training ×2","3GT":"Gait Training ×3",
+  "MT":"Manual Therapy","2MT":"Manual Therapy ×2","3MT":"Manual Therapy ×3","4MT":"Manual Therapy ×4",
+  "GPT":"Group Therapy",
+  "EVAL-61":"PT Eval – Low","EVAL-62":"PT Eval – Medium","EVAL-63":"PT Eval – High","RE-EVAL-4":"PT Re-Eval",
+  "EVAL-65":"OT Eval – Low","EVAL-66":"OT Eval – Medium","EVAL-67":"OT Eval – High","RE-EVAL-8":"OT Re-Eval",
+  "TA":"Therapeutic Activity","2TA":"Therapeutic Activity ×2",
+  "3TA":"Therapeutic Activity ×3","4TA":"Therapeutic Activity ×4",
+  "SI":"Sensory Integration","SELFCARE":"Self-Care / Home Mgmt",
+  "WC":"Wound Care","WC2":"Wound Care (add-on)",
+  "PPT":"Physical Performance Test",
+  "OM":"Orthotic Mgmt","2OM":"Orthotic Mgmt ×2","3OM":"Orthotic Mgmt ×3",
 };
 
-export const CPT_CODES = {
-  '97161': { category: CODE_CATEGORIES.EVAL, isTimed: false, maxUnits: 1, label: 'PT Eval – Low Complexity' },
-  '97162': { category: CODE_CATEGORIES.EVAL, isTimed: false, maxUnits: 1, label: 'PT Eval – Moderate Complexity' },
-  '97163': { category: CODE_CATEGORIES.EVAL, isTimed: false, maxUnits: 1, label: 'PT Eval – High Complexity' },
-  '97164': { category: CODE_CATEGORIES.EVAL, isTimed: false, maxUnits: 1, label: 'PT Re-Evaluation' },
+export const PT_EVALS = ["EVAL-61","EVAL-62","EVAL-63","RE-EVAL-4"];
+export const OT_EVALS = ["EVAL-65","EVAL-66","EVAL-67","RE-EVAL-8"];
 
-  '97110': { category: CODE_CATEGORIES.THERAPEUTIC, isTimed: true, maxUnits: 4, label: 'Therapeutic Exercises' },
-  '97112': { category: CODE_CATEGORIES.THERAPEUTIC, isTimed: true, maxUnits: 4, label: 'Neuromuscular Re-ed' },
-  '97116': { category: CODE_CATEGORIES.THERAPEUTIC, isTimed: true, maxUnits: 4, label: 'Gait Training' },
-  '97140': { category: CODE_CATEGORIES.THERAPEUTIC, isTimed: true, maxUnits: 4, label: 'Manual Therapy' },
-  '97530': { category: CODE_CATEGORIES.THERAPEUTIC, isTimed: true, maxUnits: 4, label: 'Therapeutic Activities' },
-  '97535': { category: CODE_CATEGORIES.THERAPEUTIC, isTimed: true, maxUnits: 4, label: 'Self-Care / Home Mgmt' },
-  '97542': { category: CODE_CATEGORIES.THERAPEUTIC, isTimed: true, maxUnits: 4, label: 'Wheelchair Mgmt' },
-  '97750': { category: CODE_CATEGORIES.THERAPEUTIC, isTimed: true, maxUnits: 4, label: 'Physical Performance Test' },
-
-  '97010': { category: CODE_CATEGORIES.MODALITY_SUPERVISED, isTimed: false, maxUnits: 1, label: 'Hot / Cold Pack' },
-  '97012': { category: CODE_CATEGORIES.MODALITY_SUPERVISED, isTimed: false, maxUnits: 1, label: 'Mechanical Traction' },
-  '97014': { category: CODE_CATEGORIES.MODALITY_SUPERVISED, isTimed: false, maxUnits: 1, label: 'E-Stim (unattended)' },
-  '97018': { category: CODE_CATEGORIES.MODALITY_SUPERVISED, isTimed: false, maxUnits: 1, label: 'Paraffin Bath' },
-
-  '97032': { category: CODE_CATEGORIES.MODALITY_ATTENDED, isTimed: true, maxUnits: 2, label: 'E-Stim (attended)' },
-  '97033': { category: CODE_CATEGORIES.MODALITY_ATTENDED, isTimed: true, maxUnits: 2, label: 'Iontophoresis' },
-  '97035': { category: CODE_CATEGORIES.MODALITY_ATTENDED, isTimed: true, maxUnits: 2, label: 'Ultrasound' },
-  '97036': { category: CODE_CATEGORIES.MODALITY_ATTENDED, isTimed: true, maxUnits: 2, label: 'Hubbard Tank' },
-
-  '20560': { category: CODE_CATEGORIES.NEEDLING, isTimed: false, maxUnits: 1, label: 'Dry Needling 1-2 muscles' },
-  '20561': { category: CODE_CATEGORIES.NEEDLING, isTimed: false, maxUnits: 1, label: 'Dry Needling 3+ muscles' },
-
-  '97150': { category: CODE_CATEGORIES.GROUP, isTimed: true, maxUnits: 4, label: 'Group Therapeutic' },
-  '97113': { category: CODE_CATEGORIES.GROUP, isTimed: true, maxUnits: 4, label: 'Aquatic Therapy' },
-};
-
-// 8-minute rule: converts total minutes into billable units
-export function minutesToUnits(minutes) {
-  if (minutes < 8) return 0;
-  if (minutes <= 22) return 1;
-  if (minutes <= 37) return 2;
-  if (minutes <= 52) return 3;
-  if (minutes <= 67) return 4;
-  if (minutes <= 82) return 5;
-  if (minutes <= 97) return 6;
-  return Math.ceil((minutes - 7) / 15);
-}
-
-export function getCodesByCategory() {
-  const grouped = {};
-  for (const [code, meta] of Object.entries(CPT_CODES)) {
-    const cat = meta.category;
-    if (!grouped[cat]) grouped[cat] = [];
-    grouped[cat].push({ code, ...meta });
-  }
-  return grouped;
-}
+export const CODE_GROUPS = [
+  { key:"Therapeutic", label:"Therapeutic",
+    codes:["TX","2TX","3TX","4TX","NR","2NR","3NR","4NR","MT","2MT","3MT","4MT","TA","2TA","3TA","4TA","GT","2GT","3GT","GPT"] },
+  { key:"Modalities",  label:"Modalities",
+    codes:["ESM","ES","VASO","US","TRX","PB","IONTO","CR","PPT","SELFCARE","SI"] },
+  { key:"Aquatic",     label:"Aquatic",
+    codes:["AQ","AQ2","AQ3","AQ4","AQ5"] },
+  { key:"Strapping",   label:"Strapping",
+    codes:["ST","SSH","SE","SHAND","SHIP","SK","SF","STOE"] },
+  { key:"DryNeedling", label:"Dry Needling",
+    codes:["DN1","DN2"] },
+  { key:"WoundCare",   label:"Wound Care",
+    codes:["WC","WC2"] },
+  { key:"Orthotic",    label:"Orthotic Mgmt",
+    codes:["OM","2OM","3OM"] },
+];

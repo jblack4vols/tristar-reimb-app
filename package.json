@@ -9,6 +9,13 @@
   },
   "dependencies": {
     "@azure/msal-browser": "^3.10.0",
+    "@supabase/supabase-js": "^2.100.1",
+    "bcryptjs": "^3.0.3",
+    "crypto-js": "^4.2.0",
+    "file-saver": "^2.0.5",
+    "jspdf": "^4.2.1",
+    "jspdf-autotable": "^5.0.7",
+    "jszip": "^3.10.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },

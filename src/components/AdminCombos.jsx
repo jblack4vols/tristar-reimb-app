@@ -1,98 +1,70 @@
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { store } from '../utils/store';
-import { CPT_CODES } from '../data/codes';
-import { DEFAULT_RATES, PAYER_MULTIPLIERS } from '../data/rates';
+import { useAdminData } from '../utils/useAdminData';
 
 export default function AdminCombos({ user }) {
-  const [combos, setCombos] = useState([]);
+  const { rates: RATES } = useAdminData();
+  const [combos, setCombos] = useState(() => store.getCombos());
+  const [search, setSearch] = useState('');
 
-  useEffect(() => {
-    setCombos(store.getCombos());
-  }, []);
+  const del = async (id) => {
+    if (!confirm('Delete this combo?')) return;
+    const up = store.getCombos().filter(c => c.id !== id);
+    await store.setCombos(up);
+    await store.pushLog({ user: user?.username || 'admin', action: 'delete_combo', detail: id });
+    setCombos(up);
+  };
 
-  function handleDelete(id) {
-    const target = combos.find(c => c.id === id);
-    if (!target) return;
-    if (!confirm(`Delete combo "${target.name}"?`)) return;
-
-    const updated = combos.filter(c => c.id !== id);
-    setCombos(updated);
-    store.setCombos(updated);
-    store.pushLog({ action: 'combo_deleted', user: user.email, detail: `Deleted combo "${target.name}"` });
-  }
-
-  function comboTotal(combo) {
-    const multiplier = PAYER_MULTIPLIERS[combo.payer] || 1.0;
-    return combo.lines.reduce((sum, l) => {
-      const rate = DEFAULT_RATES[l.code];
-      if (!rate) return sum;
-      const meta = CPT_CODES[l.code];
-      const units = meta?.isTimed ? l.units : 1;
-      return sum + rate.medicare * multiplier * units;
-    }, 0);
-  }
-
-  if (combos.length === 0) {
-    return (
-      <div className="card">
-        <div className="card-header">
-          <h2 className="card-title">Saved Combos</h2>
-        </div>
-        <div className="empty-state">
-          <div className="empty-state-icon">📦</div>
-          <div className="empty-state-text">No combos saved yet. Use the Calculator to create one.</div>
-        </div>
-      </div>
-    );
-  }
+  const filtered = combos.filter(c =>
+    !search || [c.name || '', c.owner || '', c.payer || ''].join(' ').toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
-    <div className="card">
-      <div className="card-header">
-        <h2 className="card-title">All Saved Combos</h2>
-        <span style={{ fontSize: '0.82rem', color: 'var(--gray-500)' }}>{combos.length} combos</span>
+    <div>
+      <div className="section-head">
+        All Saved Combos <span style={{ fontSize: 14, fontWeight: 500, color: '#6b7280' }}>({combos.length})</span>
       </div>
+      <input
+        placeholder="Search by name, owner, or payer…"
+        value={search}
+        onChange={e => setSearch(e.target.value)}
+        style={{ marginBottom: 12 }}
+      />
 
-      <div className="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Payer</th>
-              <th>Codes</th>
-              <th>Est. Total</th>
-              <th>Created By</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {combos.map(c => (
-              <tr key={c.id}>
-                <td style={{ fontWeight: 600 }}>{c.name}</td>
-                <td>{c.payer}</td>
-                <td>
-                  {c.lines.map((l, i) => (
-                    <span key={i} className="combo-chip">
-                      {l.code} ×{l.units}
-                    </span>
-                  ))}
-                </td>
-                <td style={{ fontWeight: 700 }}>${comboTotal(c).toFixed(2)}</td>
-                <td style={{ fontSize: '0.8rem', color: 'var(--gray-500)' }}>{c.createdBy}</td>
-                <td>
-                  <button
-                    className="btn btn-ghost btn-sm"
-                    onClick={() => handleDelete(c.id)}
-                    style={{ color: 'var(--red)' }}
-                  >
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      {filtered.length === 0 && (
+        <div style={{ textAlign: 'center', padding: '2rem', color: '#9ca3af', fontSize: 15 }}>
+          No saved combos yet.
+        </div>
+      )}
+
+      {filtered.map(c => {
+        const amt = c.payer
+          ? c.codes.reduce((s, code) => s + ((RATES[code] || {})[c.payer] || 0), 0)
+          : null;
+        return (
+          <div key={c.id} className="card">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, marginBottom: 8 }}>
+              <div style={{ fontWeight: 700, fontSize: 15 }}>{c.name}</div>
+              {amt !== null && (
+                <div style={{ fontWeight: 700, color: '#FF8200', fontSize: 16, flexShrink: 0 }}>
+                  ${amt.toFixed(2)}
+                </div>
+              )}
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginBottom: 8 }}>
+              {c.codes.map(code => <span key={code} className="badge" style={{ fontSize: 11 }}>{code}</span>)}
+            </div>
+            <div style={{ fontSize: 13, color: '#6b7280', marginBottom: 10 }}>
+              {c.payer && <span style={{ marginRight: 12 }}><strong>Payer:</strong> {c.payer}</span>}
+              {c.owner && <span style={{ marginRight: 12 }}><strong>Owner:</strong> {c.owner}</span>}
+              {c.savedAt && <span style={{ color: '#9ca3af' }}>{new Date(c.savedAt).toLocaleDateString()}</span>}
+            </div>
+            {user?.role === 'superadmin' && (
+              <button className="btn btn-danger btn-sm" onClick={() => del(c.id)}>Delete</button>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }

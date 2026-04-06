@@ -1,27 +1,36 @@
-// Tristar Physical Therapy clinic and provider directory
+export const PROVIDERS_MAP = {
+  "Morristown":     ["Julia Bentley","Rachel Harris","Sydney Hurd (OT)","Donnie Newberry Jr","Kirsten Wright","Andrew Fowler"],
+  "Maryville":      ["Kristen Bonk","Caitlin Neely","Emma Patterson (OT)"],
+  "Bean Station":   ["Emily Moucha","Elizabeth Reece (OT)"],
+  "Newport":        ["Kesley Kirk","Alexander McGlohon (OT)"],
+  "Jefferson City": ["Nicholas Moore","Madison Misenheimer (OT)"],
+  "Rogersville":    ["Logan Harris","Etta Rich (OT)"],
+  "New Tazewell":   ["Jacob Runions"],
+  "Johnson City":   ["Jeremy Cook","Kaiden Miller (OT)"],
+  "PRN":            ["Jordan Black","Morgan Black"],
+};
 
-export const CLINICS = [
-  { id: 'main', name: 'Tristar PT — Main Clinic', npi: '' },
-  { id: 'east', name: 'Tristar PT — East', npi: '' },
-  { id: 'west', name: 'Tristar PT — West', npi: '' },
-];
-
-export const PROVIDER_TYPES = [
-  { value: 'PT', label: 'Physical Therapist' },
-  { value: 'PTA', label: 'Physical Therapist Assistant' },
-  { value: 'OT', label: 'Occupational Therapist' },
-  { value: 'OTA', label: 'OT Assistant' },
-  { value: 'SLP', label: 'Speech-Language Pathologist' },
-];
-
-export const DEFAULT_PROVIDERS = [
-  { id: '1', name: 'Jordan Black', type: 'PT', clinic: 'main' },
-];
-
-export function getClinicLabel(clinicId) {
-  return CLINICS.find(c => c.id === clinicId)?.name || clinicId;
+/**
+ * Determine discipline type from provider name suffix:
+ *   (OT) = Occupational Therapist
+ *   (COTA) = Certified OT Assistant (uses OT evals)
+ *   (PTA) = Physical Therapist Assistant (uses PT evals)
+ *   No suffix = PT (Physical Therapist)
+ */
+export function getDiscipline(name) {
+  if (name.includes('(COTA)')) return 'COTA';
+  if (name.includes('(OT)'))   return 'OT';
+  if (name.includes('(PTA)'))  return 'PTA';
+  return 'PT';
 }
 
-export function getProviderTypeLabel(typeValue) {
-  return PROVIDER_TYPES.find(t => t.value === typeValue)?.label || typeValue;
+export function isOTDiscipline(discipline) {
+  return discipline === 'OT' || discipline === 'COTA';
 }
+
+export const ALL_PROVIDERS = Object.entries(PROVIDERS_MAP).flatMap(([loc, names]) =>
+  names.map(n => {
+    const discipline = getDiscipline(n);
+    return { name: n, location: loc, isOT: isOTDiscipline(discipline), discipline };
+  })
+);

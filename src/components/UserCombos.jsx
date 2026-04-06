@@ -1,97 +1,61 @@
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { store } from '../utils/store';
-import { CPT_CODES } from '../data/codes';
-import { DEFAULT_RATES, PAYER_MULTIPLIERS } from '../data/rates';
+import { useAdminData } from '../utils/useAdminData';
 
 export default function UserCombos({ user }) {
-  const [combos, setCombos] = useState([]);
+  const { rates: RATES } = useAdminData();
+  const uid = user.id || user.username;
+  const [combos, setCombos] = useState(() =>
+    store.getCombos().filter(c => c.ownerId === uid)
+  );
 
-  useEffect(() => {
-    const all = store.getCombos();
-    setCombos(all.filter(c => c.createdBy === user.email));
-  }, [user.email]);
-
-  function handleDelete(id) {
-    const target = combos.find(c => c.id === id);
-    if (!target) return;
-    if (!confirm(`Delete combo "${target.name}"?`)) return;
-
-    const allCombos = store.getCombos().filter(c => c.id !== id);
-    store.setCombos(allCombos);
-    setCombos(allCombos.filter(c => c.createdBy === user.email));
-    store.pushLog({ action: 'combo_deleted', user: user.email, detail: `Deleted combo "${target.name}"` });
-  }
-
-  function comboTotal(combo) {
-    const multiplier = PAYER_MULTIPLIERS[combo.payer] || 1.0;
-    return combo.lines.reduce((sum, l) => {
-      const rate = DEFAULT_RATES[l.code];
-      if (!rate) return sum;
-      const meta = CPT_CODES[l.code];
-      const units = meta?.isTimed ? l.units : 1;
-      return sum + rate.medicare * multiplier * units;
-    }, 0);
-  }
-
-  if (combos.length === 0) {
-    return (
-      <div className="card">
-        <div className="card-header">
-          <h2 className="card-title">My Combos</h2>
-        </div>
-        <div className="empty-state">
-          <div className="empty-state-icon">📦</div>
-          <div className="empty-state-text">You haven't saved any combos yet. Use the Calculator to create one.</div>
-        </div>
-      </div>
-    );
-  }
+  const del = async (id) => {
+    if (!confirm('Delete this combo?')) return;
+    const up = store.getCombos().filter(c => c.id !== id);
+    await store.setCombos(up);
+    setCombos(up.filter(c => c.ownerId === uid));
+  };
 
   return (
-    <div className="card">
-      <div className="card-header">
-        <h2 className="card-title">My Combos</h2>
-        <span style={{ fontSize: '0.82rem', color: 'var(--gray-500)' }}>{combos.length} combos</span>
-      </div>
+    <div>
+      <div className="section-head">My Saved Combos</div>
 
-      <div className="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Payer</th>
-              <th>Codes</th>
-              <th>Est. Total</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {combos.map(c => (
-              <tr key={c.id}>
-                <td style={{ fontWeight: 600 }}>{c.name}</td>
-                <td>{c.payer}</td>
-                <td>
-                  {c.lines.map((l, i) => (
-                    <span key={i} className="combo-chip">
-                      {l.code} ×{l.units}
-                    </span>
-                  ))}
-                </td>
-                <td style={{ fontWeight: 700 }}>${comboTotal(c).toFixed(2)}</td>
-                <td>
-                  <button
-                    className="btn btn-ghost btn-sm"
-                    onClick={() => handleDelete(c.id)}
-                    style={{ color: 'var(--red)' }}
-                  >
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      {combos.length === 0 && (
+        <div style={{ textAlign: 'center', padding: '2rem', background: '#f3f4f6', borderRadius: 14, color: '#6b7280', fontSize: 15, lineHeight: 1.6 }}>
+          No combos saved yet.<br/>
+          Build a visit in the <strong>Calculator</strong> tab, then tap <strong>Save Combo</strong>.
+        </div>
+      )}
+
+      {combos.map(c => {
+        const amt = c.payer
+          ? c.codes.reduce((s, code) => s + ((RATES[code] || {})[c.payer] || 0), 0)
+          : null;
+        return (
+          <div key={c.id} className="card">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, marginBottom: 8 }}>
+              <div style={{ fontWeight: 700, fontSize: 15 }}>{c.name}</div>
+              {amt !== null && (
+                <div style={{ fontWeight: 700, color: '#FF8200', fontSize: 16, flexShrink: 0 }}>
+                  ${amt.toFixed(2)}
+                </div>
+              )}
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginBottom: 8 }}>
+              {c.codes.map(code => <span key={code} className="badge" style={{ fontSize: 11 }}>{code}</span>)}
+            </div>
+            {c.payer && (
+              <div style={{ fontSize: 13, color: '#6b7280', marginBottom: 10 }}>
+                <strong>Payer:</strong> {c.payer}
+                {c.savedAt && <span style={{ color: '#9ca3af', marginLeft: 10 }}>{new Date(c.savedAt).toLocaleDateString()}</span>}
+              </div>
+            )}
+            {user?.role === 'superadmin' && (
+              <button className="btn btn-danger btn-sm" onClick={() => del(c.id)}>Delete</button>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }
