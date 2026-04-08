@@ -249,7 +249,7 @@ export default function RateManager({ user }) {
     async (code, payer, value) => {
       try {
         await ds.setRate(code, payer, value);
-        showToast(`Saved ${code} / ${payer}: $${value.toFixed(2)}`);
+        setToast(`Saved ${code} / ${payer}: $${value.toFixed(2)}`);
       } catch (err) {
         setError(`Failed to save rate for ${code} / ${payer}: ${err.message}`);
       }

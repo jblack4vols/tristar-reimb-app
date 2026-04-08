@@ -54,10 +54,11 @@ export default function RateChangeLog() {
 
   // Summary stats
   const stats = useMemo(() => {
-    const today = new Date().toISOString().split('T')[0];
-    const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0];
-    const todayChanges = changes.filter(c => (c.changed_at || '').startsWith(today));
-    const weekChanges = changes.filter(c => c.changed_at >= weekAgo);
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const weekAgoMs = Date.now() - 7 * 86400000;
+    const todayChanges = changes.filter(c => c.changed_at && new Date(c.changed_at).getTime() >= todayStart);
+    const weekChanges = changes.filter(c => c.changed_at && new Date(c.changed_at).getTime() >= weekAgoMs);
 
     let increases = 0;
     let decreases = 0;

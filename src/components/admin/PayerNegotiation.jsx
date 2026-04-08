@@ -137,7 +137,7 @@ export default function PayerNegotiation() {
 
   const exportPDF = useCallback(async () => {
     const { default: jsPDF } = await import('jspdf');
-    await import('jspdf-autotable');
+    const { default: autoTable } = await import('jspdf-autotable');
     const doc = new jsPDF('landscape');
 
     // Title
@@ -158,7 +158,7 @@ export default function PayerNegotiation() {
       doc.setTextColor(26, 26, 26);
       doc.text('Top Negotiation Targets', 14, 52);
 
-      doc.autoTable({
+      autoTable(doc, {
         startY: 56,
         head: [['Payer', 'Code', 'Description', 'Their Rate', 'Market Avg', 'Best Rate', 'Gap', 'Est. Annual Gain']],
         body: opportunities.map(o => [
@@ -172,7 +172,7 @@ export default function PayerNegotiation() {
     }
 
     // Cross-payer rate comparison
-    const y = doc.lastAutoTable ? doc.lastAutoTable.finalY + 12 : 60;
+    const y = doc.previousAutoTable ? doc.previousAutoTable.finalY + 12 : 60;
     doc.setFontSize(12);
     doc.setTextColor(26, 26, 26);
     doc.text('Cross-Payer Rate Comparison (Top 15 Codes)', 14, y);
@@ -189,10 +189,10 @@ export default function PayerNegotiation() {
     });
 
     // Payer volume summary
-    const y2 = doc.lastAutoTable.finalY + 12;
+    const y2 = doc.previousAutoTable.finalY + 12;
     if (y2 < 170) {
       doc.text('Payer Volume & Revenue', 14, y2);
-      doc.autoTable({
+      autoTable(doc, {
         startY: y2 + 4,
         head: [['Payer', 'Visits', 'Revenue', 'Avg/Visit']],
         body: payerStats.map(p => [p.payer, p.visits, fmt$(p.revenue), fmt$(p.avgPerVisit)]),

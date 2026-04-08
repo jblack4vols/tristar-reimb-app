@@ -23,11 +23,7 @@ export default function PayerComparison() {
 
   // All available code keys
   const allCodes = useMemo(() => {
-    const codeSet = new Set();
-    Object.values(rates || {}).forEach(payerRates => {
-      Object.keys(payerRates).forEach(code => codeSet.add(code));
-    });
-    return [...codeSet].sort();
+    return Object.keys(rates || {}).sort();
   }, [rates]);
 
   // Payer names

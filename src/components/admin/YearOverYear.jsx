@@ -55,16 +55,19 @@ export default function YearOverYear() {
     return [...set].sort();
   }, [thisYearVisits, lastYearVisits]);
 
-  // Apply filters
-  const applyFilter = (visits) => {
-    let filtered = visits;
+  // Apply filters (inlined to avoid stale closure in useMemo)
+  const filteredThis = useMemo(() => {
+    let filtered = thisYearVisits;
     if (filterLocation) filtered = filtered.filter(v => v.location === filterLocation);
     if (filterProvider) filtered = filtered.filter(v => v.provider === filterProvider);
     return filtered;
-  };
-
-  const filteredThis = useMemo(() => applyFilter(thisYearVisits), [thisYearVisits, filterLocation, filterProvider]);
-  const filteredLast = useMemo(() => applyFilter(lastYearVisits), [lastYearVisits, filterLocation, filterProvider]);
+  }, [thisYearVisits, filterLocation, filterProvider]);
+  const filteredLast = useMemo(() => {
+    let filtered = lastYearVisits;
+    if (filterLocation) filtered = filtered.filter(v => v.location === filterLocation);
+    if (filterProvider) filtered = filtered.filter(v => v.provider === filterProvider);
+    return filtered;
+  }, [lastYearVisits, filterLocation, filterProvider]);
 
   // Aggregate by month
   const aggregateByMonth = (visits) => {
