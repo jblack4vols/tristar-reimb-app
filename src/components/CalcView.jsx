@@ -49,6 +49,9 @@ export default function CalcView({ user, templateCodes, selectedPatient, onClear
     }
   }, [templateCodes]);
 
+  // Cleanup toast timer on unmount
+  useEffect(() => () => clearTimeout(toastTimer.current), []);
+
   // Apply selected patient name when passed from Patient Directory
   useEffect(() => {
     if (selectedPatient) {

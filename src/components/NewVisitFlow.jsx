@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { supabase } from '../utils/supabase';
 import { encryptPHI, decryptPHI } from '../utils/crypto';
 import { validatePatientName } from '../utils/validation';
@@ -47,6 +47,7 @@ export default function NewVisitFlow({ user }) {
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState('');
   const [successAnim, setSuccessAnim] = useState(false);
+  const toastTimer = useRef(null);
 
   // ── Init provider default ──────────────────────────────
   useEffect(() => {
@@ -100,12 +101,12 @@ export default function NewVisitFlow({ user }) {
 
   const groups = useMemo(() => [
     { key: 'Evals', label: isOT ? 'OT Evals' : 'PT Evals', codes: isOT ? OT_EVALS : PT_EVALS },
-    ...CODE_GROUPS,
+    ...(CODE_GROUPS || []),
   ], [isOT, CODE_GROUPS]);
 
   const visibleCodes = useMemo(() => {
     const src = grp === 'All'
-      ? [...(isOT ? OT_EVALS : PT_EVALS), ...CODE_GROUPS.flatMap(g => g.codes)]
+      ? [...(isOT ? OT_EVALS : PT_EVALS), ...(CODE_GROUPS || []).flatMap(g => g.codes)]
       : (groups.find(g => g.key === grp)?.codes || []);
     if (!codeSearch) return src;
     const t = codeSearch.toLowerCase();
@@ -142,7 +143,8 @@ export default function NewVisitFlow({ user }) {
 
   const showToast = msg => {
     setToast(msg);
-    setTimeout(() => setToast(''), 3000);
+    clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setToast(''), 3000);
   };
 
   const selectPatient = p => {
@@ -220,6 +222,7 @@ export default function NewVisitFlow({ user }) {
       setSuccessAnim(true);
       setTimeout(() => {
         setSuccessAnim(false);
+        setSaving(false);
         // Reset form
         setSelectedPatient(null);
         setPatientSearch('');
@@ -232,8 +235,8 @@ export default function NewVisitFlow({ user }) {
       }, 1400);
     } catch (e) {
       alert('Failed to log visit: ' + e.message);
+      setSaving(false);
     }
-    setSaving(false);
   };
 
   // ── Loading ────────────────────────────────────────────

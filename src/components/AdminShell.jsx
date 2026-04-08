@@ -65,7 +65,7 @@ export default function AdminShell({ user, onLogout }) {
   // Recent patients
   const [recentPatients, setRecentPatients] = useState([]);
   useEffect(() => {
-    supabase.from('billing_entries').select('patient_name').order('created_at', { ascending: false }).limit(20)
+    supabase.from('billing_entries').select('patient_name').eq('entered_by', user.username).order('created_at', { ascending: false }).limit(20)
       .then(({ data }) => {
         const names = [...new Set((data || []).map(e => decryptPHI(e.patient_name)).filter(Boolean))].slice(0, 5);
         setRecentPatients(names);

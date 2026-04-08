@@ -34,13 +34,13 @@ export default function VisitHistory({ user, adminView = false }) {
     const decrypted = (data || []).map(e => ({
       ...e,
       patient_name: decryptPHI(e.patient_name),
-      notes: decryptPHI(e.notes),
+      notes: e.notes ? decryptPHI(e.notes) : '',
     }));
     setEntries(decrypted);
     setLoading(false);
   };
 
-  useEffect(() => { fetchEntries(); }, [dateFrom, dateTo]);
+  useEffect(() => { fetchEntries(); }, [dateFrom, dateTo, adminView, user?.username]);
 
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({});
@@ -55,7 +55,7 @@ export default function VisitHistory({ user, adminView = false }) {
       patient_name: encryptPHI(editForm.patient_name),
       payer: editForm.payer,
       provider: editForm.provider,
-      notes: encryptPHI(editForm.notes),
+      notes: editForm.notes.trim() ? encryptPHI(editForm.notes) : '',
       visit_date: editForm.visit_date,
     }).eq('id', id);
     setEntries(prev => prev.map(e => e.id === id ? { ...e, ...editForm } : e));
@@ -75,7 +75,7 @@ export default function VisitHistory({ user, adminView = false }) {
       e.patient_name.toLowerCase().includes(s) ||
       e.payer.toLowerCase().includes(s) ||
       e.provider.toLowerCase().includes(s) ||
-      e.location.toLowerCase().includes(s) ||
+      (e.location || '').toLowerCase().includes(s) ||
       (e.entered_by || '').toLowerCase().includes(s) ||
       (e.codes || []).some(c => c.toLowerCase().includes(s))
     );
