@@ -14,22 +14,25 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 22
+
+      - name: Install Supabase client
+        run: npm install @supabase/supabase-js
 
       - name: Run backup script
         env:
           SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
         run: |
-          node -e "
-          const { createClient } = require('@supabase/supabase-js');
-          const fs = require('fs');
-          const path = require('path');
+          node --input-type=module -e "
+          import { createClient } from '@supabase/supabase-js';
+          import fs from 'node:fs';
+          import path from 'node:path';
 
           const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
@@ -41,39 +44,42 @@ jobs:
             'rate_changes'
           ];
 
-          async function backup() {
-            const dir = 'backup';
-            fs.mkdirSync(dir, { recursive: true });
+          const dir = 'backup';
+          fs.mkdirSync(dir, { recursive: true });
 
-            for (const table of TABLES) {
-              try {
-                const { data, error } = await supabase.from(table).select('*');
-                if (error) {
-                  console.error('Error backing up ' + table + ':', error.message);
-                  continue;
-                }
-                const file = path.join(dir, table + '.json');
-                fs.writeFileSync(file, JSON.stringify(data || [], null, 2));
-                console.log('Backed up ' + table + ': ' + (data || []).length + ' rows');
-              } catch (e) {
-                console.error('Failed to backup ' + table + ':', e.message);
+          let failed = 0;
+          for (const table of TABLES) {
+            try {
+              const { data, error } = await supabase.from(table).select('*');
+              if (error) {
+                console.error('Error backing up ' + table + ':', error.message);
+                failed++;
+                continue;
               }
+              const file = path.join(dir, table + '.json');
+              fs.writeFileSync(file, JSON.stringify(data || [], null, 2));
+              console.log('Backed up ' + table + ': ' + (data || []).length + ' rows');
+            } catch (e) {
+              console.error('Failed to backup ' + table + ':', e.message);
+              failed++;
             }
-
-            // Write metadata
-            fs.writeFileSync(path.join(dir, '_metadata.json'), JSON.stringify({
-              timestamp: new Date().toISOString(),
-              tables: TABLES,
-            }, null, 2));
-
-            console.log('Backup complete!');
           }
 
-          backup().catch(e => { console.error(e); process.exit(1); });
+          fs.writeFileSync(path.join(dir, '_metadata.json'), JSON.stringify({
+            timestamp: new Date().toISOString(),
+            tables: TABLES,
+            failedCount: failed,
+          }, null, 2));
+
+          if (failed > 0) {
+            console.error(failed + ' table(s) failed to backup');
+            process.exit(1);
+          }
+          console.log('Backup complete!');
           "
 
       - name: Upload backup artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: supabase-backup-${{ github.run_id }}
           path: backup/
