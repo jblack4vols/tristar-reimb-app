@@ -52,6 +52,7 @@ const NAV_GROUPS = [
       { k: 'report',       label: 'Monthly Report' },
       { k: 'yoy',          label: 'Year over Year' },
     ],
+    adminOnly: true,
   },
   {
     label: 'Admin',
