@@ -64,6 +64,7 @@ const NAV_GROUPS = [
       { k: 'data',      label: 'Import/Export' },
       { k: 'backup',    label: 'Data Backup' },
       { k: 'log',       label: 'Activity Log' },
+      { k: 'settings',  label: 'Feature Settings' },
       { k: 'devguide',  label: 'Developer Guide' },
     ],
     adminOnly: true,

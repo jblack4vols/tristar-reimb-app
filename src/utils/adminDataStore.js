@@ -22,6 +22,8 @@ export async function loadAllData() {
         supabase.from('code_labels').select('*'),
         supabase.from('code_groups').select('*').order('sort_order'),
       ]);
+    // Load settings in parallel (non-blocking)
+    loadSettings().catch(() => { /* settings optional */ });
 
     // Build rates object: { code: { payer: amount } }
     const rates = {};
@@ -134,6 +136,30 @@ export function getProviders() { return cache.providersMap || {}; }
 export function getBillingRules() { return cache.billingRules || {}; }
 export function getCodeLabels() { return cache.codeLabels || {}; }
 export function getCodeGroups() { return cache.codeGroups || []; }
+
+// ── App settings ──────────────────────────────────────
+
+const settingsCache = {};
+
+export async function loadSettings() {
+  try {
+    const { data } = await supabase.from('app_settings').select('*');
+    (data || []).forEach(s => { settingsCache[s.key] = s.value; });
+  } catch { /* settings table may not exist yet */ }
+}
+
+export function getSetting(key, defaultValue = null) {
+  return settingsCache[key] !== undefined ? settingsCache[key] : defaultValue;
+}
+
+export async function setSetting(key, value, changedBy = '') {
+  const { error } = await supabase
+    .from('app_settings')
+    .upsert({ key, value, updated_by: changedBy, updated_at: new Date().toISOString() }, { onConflict: 'key' });
+  if (error) throw error;
+  settingsCache[key] = value;
+  notify();
+}
 
 function getDiscipline(name) {
   if (name.includes('(COTA)')) return 'COTA';

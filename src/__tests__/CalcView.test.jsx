@@ -41,6 +41,7 @@ vi.mock('../utils/useAdminData', () => ({
     ],
     providers: { 'Nashville': ['Morgan Black'] },
     allProviders: [{ name: 'Morgan Black', location: 'Nashville', discipline: 'PT', isOT: false }],
+    getSetting: () => true,
   }),
 }));
 

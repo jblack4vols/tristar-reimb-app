@@ -41,6 +41,7 @@ const PayerNegotiation = lazy(() => import('./admin/PayerNegotiation'));
 const RateChangeLog = lazy(() => import('./admin/RateChangeLog'));
 const PayerMixReport = lazy(() => import('./admin/PayerMixReport'));
 const CodeUtilization = lazy(() => import('./admin/CodeUtilization'));
+const FeatureSettings = lazy(() => import('./admin/FeatureSettings'));
 
 const ViewLoader = () => (
   <div style={{ textAlign: 'center', padding: '3rem', color: '#9ca3af' }}>
@@ -137,6 +138,7 @@ export default function AdminShell({ user, onLogout }) {
                 {tab === 'ratechanges'  && <RateChangeLog />}
                 {tab === 'payermix'     && <PayerMixReport />}
                 {tab === 'codegaps'     && <CodeUtilization />}
+                {tab === 'settings'     && <FeatureSettings user={user} />}
                 {tab === 'feedback'     && <FeatureRequests user={user} isAdmin={true} />}
                 {tab === 'devguide'     && <DevGuide user={user} />}
               </Suspense>

@@ -4,6 +4,7 @@ import { encryptPHI, decryptPHI } from '../utils/crypto';
 import { validatePatientName } from '../utils/validation';
 import { useAdminData } from '../utils/useAdminData';
 import { store } from '../utils/store';
+import { getMissingCodeSuggestions } from '../utils/codeSuggestions';
 import BillingAlerts from './BillingAlerts';
 
 const TODAY = new Date().toISOString().split('T')[0];
@@ -17,7 +18,9 @@ export default function NewVisitFlow({ user }) {
     allProviders: ALL_PROVIDERS,
     codeLabels: CODE_LABELS,
     codeGroups: CODE_GROUPS,
+    getSetting,
   } = useAdminData();
+  const autoSuggestEnabled = getSetting('auto_suggest_codes', true);
 
   // ── Patient state ──────────────────────────────────────
   const [patientSearch, setPatientSearch] = useState('');
@@ -116,6 +119,12 @@ export default function NewVisitFlow({ user }) {
     if (!payer || codes.length === 0) return 0;
     return codes.reduce((s, c) => s + ((RATES[c] || {})[payer] || 0), 0);
   }, [codes, payer, RATES]);
+
+  // ── Auto-suggest missing codes ─────────────────────────
+  const missingSuggestions = useMemo(() => {
+    if (!autoSuggestEnabled || codes.length === 0) return [];
+    return getMissingCodeSuggestions(codes, RATES, payer);
+  }, [codes, payer, RATES, autoSuggestEnabled]);
 
   // ── Patient search filter ──────────────────────────────
   const filteredPatients = useMemo(() => {
@@ -613,6 +622,40 @@ export default function NewVisitFlow({ user }) {
           </div>
         )}
       </div>
+
+      {/* Auto-suggest missing codes */}
+      {missingSuggestions.length > 0 && payer && (
+        <div className="card" style={{ borderColor: '#16a34a', borderWidth: 2, marginBottom: 16, background: 'linear-gradient(135deg, #f0fdf4 0%, #fff 100%)' }}>
+          <div style={{ fontWeight: 700, fontSize: 14, color: '#16a34a', marginBottom: 8 }}>
+            $ Missing Codes — Bill More for This Visit
+          </div>
+          {missingSuggestions.map(s => (
+            <div key={s.code} style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10,
+              padding: '8px 0', borderBottom: '1px solid rgba(22,163,74,0.12)',
+            }}>
+              <div style={{ flex: 1 }}>
+                <span style={{ fontWeight: 700, fontSize: 13 }}>{s.code}</span>
+                <span style={{ fontSize: 12, color: '#6b7280', marginLeft: 6 }}>{CODE_LABELS[s.code] || ''}</span>
+                <div style={{ fontSize: 12, color: '#15803d', marginTop: 2 }}>{s.reason}</div>
+                {s.estimatedAmount > 0 && (
+                  <div style={{ fontSize: 12, color: '#FF8200', fontWeight: 700 }}>+${s.estimatedAmount.toFixed(2)}</div>
+                )}
+              </div>
+              <button
+                onClick={() => setCodes(p => [...p, s.code])}
+                style={{
+                  background: '#16a34a', color: '#fff', border: 'none', borderRadius: 8,
+                  padding: '7px 12px', fontWeight: 700, fontSize: 12, cursor: 'pointer',
+                  boxShadow: '0 2px 4px rgba(22,163,74,0.25)', whiteSpace: 'nowrap',
+                }}
+              >
+                + Add
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* ================================================================
           SECTION 4: SUMMARY & SAVE

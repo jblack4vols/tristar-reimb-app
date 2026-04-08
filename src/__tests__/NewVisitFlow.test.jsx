@@ -41,6 +41,7 @@ vi.mock('../utils/useAdminData', () => ({
     codeGroups: [
       { key: 'Therapeutic', label: 'Therapeutic', codes: ['TX', 'MT'] },
     ],
+    getSetting: () => true,
   }),
 }));
 

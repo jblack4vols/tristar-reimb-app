@@ -32,5 +32,6 @@ export function useAdminData() {
     billingRules: ds.getBillingRules(),
     codeLabels: ds.getCodeLabels(),
     codeGroups: ds.getCodeGroups(),
+    getSetting: ds.getSetting,
   };
 }

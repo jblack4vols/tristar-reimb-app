@@ -8,13 +8,15 @@ import EightMinuteRule from './EightMinuteRule';
 import BillingAlerts from './BillingAlerts';
 import PdfExport from './PdfExport';
 import { getOptimizationSuggestions } from '../utils/billingOptimizer';
+import { getMissingCodeSuggestions } from '../utils/codeSuggestions';
 
 export default function CalcView({ user, templateCodes, selectedPatient, onClearTemplate, onClearPatient }) {
   const { loading: dataLoading, rates: RATES, payers: PAYERS, contractPayers: CONTRACT_PAYERS,
     billingRules: BILLING_RULES, codeLabels: CODE_LABELS, codeGroups: CODE_GROUPS,
-    providers: PROVIDERS_MAP, allProviders: ALL_PROVIDERS } = useAdminData();
+    providers: PROVIDERS_MAP, allProviders: ALL_PROVIDERS, getSetting } = useAdminData();
   const PT_EVALS = DEFAULT_PT_EVALS;
   const OT_EVALS = DEFAULT_OT_EVALS;
+  const autoSuggestEnabled = getSetting('auto_suggest_codes', true);
   const [mode, setMode]               = useState('fee');
   // Default provider to logged-in user's name if they're a provider
   const [provider, setProvider]       = useState(() => {
@@ -124,6 +126,18 @@ export default function CalcView({ user, templateCodes, selectedPatient, onClear
     getOptimizationSuggestions(codes, payer, RATES),
     [codes, payer, RATES]
   );
+
+  // Auto-suggest missing codes
+  const [historicalEntries, setHistoricalEntries] = useState([]);
+  useEffect(() => {
+    supabase.from('billing_entries').select('codes').order('created_at', { ascending: false }).limit(200)
+      .then(({ data }) => setHistoricalEntries(data || []));
+  }, []);
+
+  const missingSuggestions = useMemo(() => {
+    if (!autoSuggestEnabled || codes.length === 0 || mode !== 'fee') return [];
+    return getMissingCodeSuggestions(codes, RATES, payer, historicalEntries);
+  }, [codes, payer, RATES, historicalEntries, autoSuggestEnabled, mode]);
 
   const toggle = c => setCodes(p => p.includes(c) ? p.filter(x => x !== c) : [...p, c]);
 
@@ -431,6 +445,53 @@ export default function CalcView({ user, templateCodes, selectedPatient, onClear
                   </div>
                 </div>
               ))}
+            </div>
+          )}
+
+          {/* Auto-suggest missing codes */}
+          {missingSuggestions.length > 0 && (
+            <div className="card" style={{ borderColor: '#16a34a', borderWidth: 2, marginBottom: 14, background: 'linear-gradient(135deg, #f0fdf4 0%, #fff 100%)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                <span style={{ fontSize: 18 }}>$</span>
+                <div style={{ fontWeight: 700, fontSize: 14, color: '#16a34a' }}>
+                  Missing Codes — You Could Be Billing More
+                </div>
+              </div>
+              {missingSuggestions.map(s => (
+                <div key={s.code} style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10,
+                  padding: '10px 0', borderBottom: '1px solid rgba(22,163,74,0.12)',
+                }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: 700, fontSize: 14, color: '#1a1a1a' }}>
+                      {s.code} <span style={{ fontWeight: 400, fontSize: 12, color: '#6b7280' }}>{CODE_LABELS[s.code] || ''}</span>
+                    </div>
+                    <div style={{ fontSize: 12, color: '#15803d', marginTop: 2, lineHeight: 1.4 }}>
+                      {s.reason}
+                    </div>
+                    {s.estimatedAmount > 0 && (
+                      <div style={{ fontSize: 12, color: '#FF8200', fontWeight: 700, marginTop: 2 }}>
+                        +${s.estimatedAmount.toFixed(2)} for {payer}
+                      </div>
+                    )}
+                  </div>
+                  <button
+                    className="btn btn-sm"
+                    onClick={() => setCodes(p => [...p, s.code])}
+                    style={{
+                      background: '#16a34a', color: '#fff', border: 'none',
+                      borderRadius: 8, padding: '8px 14px', fontWeight: 700, fontSize: 13,
+                      whiteSpace: 'nowrap', flexShrink: 0, cursor: 'pointer',
+                      boxShadow: '0 2px 4px rgba(22,163,74,0.25)',
+                    }}
+                  >
+                    + Add
+                  </button>
+                </div>
+              ))}
+              <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 8 }}>
+                Based on common billing patterns and your visit history.
+              </div>
             </div>
           )}
 
