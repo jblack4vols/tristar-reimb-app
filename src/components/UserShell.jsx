@@ -15,7 +15,6 @@ const BatchVisitEntry = lazy(() => import('./BatchVisitEntry'));
 const PatientDirectory = lazy(() => import('./PatientDirectory'));
 const VisitHistory = lazy(() => import('./VisitHistory'));
 const TreatmentTemplates = lazy(() => import('./TreatmentTemplates'));
-const AuthTracker = lazy(() => import('./AuthTracker'));
 const FeatureRequests = lazy(() => import('./FeatureRequests'));
 const UserCombos = lazy(() => import('./UserCombos'));
 const QuickStartGuide = lazy(() => import('./QuickStartGuide'));
@@ -85,7 +84,6 @@ export default function UserShell({ user, onLogout }) {
                 {tab === 'newvisit'  && <NewVisitFlow user={user} />}
                 {tab === 'batch'     && <BatchVisitEntry user={user} />}
                 {tab === 'patients'  && <PatientDirectory user={user} onSelectPatient={selectPatient} />}
-                {tab === 'auths'     && <AuthTracker user={user} />}
                 {tab === 'templates' && <TreatmentTemplates user={user} onApplyTemplate={applyTemplate} />}
                 {tab === 'visits'    && <VisitHistory user={user} />}
                 {tab === 'combos'    && <UserCombos user={user} />}

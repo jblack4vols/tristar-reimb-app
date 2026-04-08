@@ -16,7 +16,6 @@ const NAV_GROUPS = [
       { k: 'newvisit',  label: 'New Visit' },
       { k: 'batch',     label: 'Batch Entry' },
       { k: 'patients',  label: 'Patients' },
-      { k: 'auths',     label: 'Authorizations' },
       { k: 'templates', label: 'Templates' },
     ],
   },
