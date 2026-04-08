@@ -246,7 +246,8 @@ export default function BatchVisitEntry({ user }) {
         )}
 
         {/* ── Table ── */}
-        <div className="rate-table-wrap">
+        <div className="rate-table-wrap" style={{ overflow: 'visible' }}>
+          <div style={{ overflowX: 'auto' }}>
           <table className="rate-table" style={{ minWidth: 900 }}>
             <thead>
               <tr>
@@ -565,6 +566,7 @@ export default function BatchVisitEntry({ user }) {
               </tr>
             </tfoot>
           </table>
+          </div>
         </div>
 
         {/* Validation summary */}
