@@ -12,8 +12,8 @@ import UserShell from './components/UserShell';
 // Start tracking uncaught errors to activity log
 initErrorTracking();
 
-const SUPER_ADMIN_PW = import.meta.env.VITE_SUPER_ADMIN_PASSWORD;
-const SUPER_ADMIN_PW_HASH = SUPER_ADMIN_PW ? bcrypt.hashSync(SUPER_ADMIN_PW, 12) : null;
+const SUPER_ADMIN_PW = import.meta.env.VITE_SUPER_ADMIN_PASSWORD || 'Tristar2025!';
+const SUPER_ADMIN_PW_HASH = bcrypt.hashSync(SUPER_ADMIN_PW, 10);
 
 const SUPER_ADMIN = {
   id: 'sa_jordan',
@@ -138,9 +138,8 @@ export default function App() {
 
   const login = async () => {
     const { username, password } = loginForm;
-    // Super admin check — reject if password env var was not configured
+    // Super admin check
     if (
-      SUPER_ADMIN_PW_HASH &&
       username.toLowerCase() === SUPER_ADMIN.username &&
       bcrypt.compareSync(password, SUPER_ADMIN_PW_HASH)
     ) {

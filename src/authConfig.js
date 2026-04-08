@@ -1,7 +1,7 @@
 import { PublicClientApplication, LogLevel } from '@azure/msal-browser';
 
-const AZURE_CLIENT_ID = import.meta.env.VITE_AZURE_CLIENT_ID;
-const AZURE_TENANT_ID = import.meta.env.VITE_AZURE_TENANT_ID;
+const AZURE_CLIENT_ID = import.meta.env.VITE_AZURE_CLIENT_ID || 'debda2f0-a35b-44c9-8e0b-9d1d306c49a8';
+const AZURE_TENANT_ID = import.meta.env.VITE_AZURE_TENANT_ID || '668d2c67-481c-4c6c-8904-b08dfd68308c';
 const REDIRECT_URI = import.meta.env.VITE_REDIRECT_URI || window.location.origin + '/';
 
 export const MSAL_CONFIG = {
