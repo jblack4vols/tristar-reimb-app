@@ -1,0 +1,80 @@
+name: Weekly Supabase Backup
+
+on:
+  schedule:
+    # Every Sunday at 6 AM UTC (1 AM EST)
+    - cron: '0 6 * * 0'
+  workflow_dispatch: # Allow manual trigger
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Run backup script
+        env:
+          SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+        run: |
+          node -e "
+          const { createClient } = require('@supabase/supabase-js');
+          const fs = require('fs');
+          const path = require('path');
+
+          const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
+
+          const TABLES = [
+            'rates', 'payers', 'contract_payers', 'providers',
+            'billing_rules', 'code_labels', 'code_groups',
+            'combos', 'activity_log', 'billing_entries',
+            'patients', 'treatment_templates', 'authorizations',
+            'rate_changes'
+          ];
+
+          async function backup() {
+            const dir = 'backup';
+            fs.mkdirSync(dir, { recursive: true });
+
+            for (const table of TABLES) {
+              try {
+                const { data, error } = await supabase.from(table).select('*');
+                if (error) {
+                  console.error('Error backing up ' + table + ':', error.message);
+                  continue;
+                }
+                const file = path.join(dir, table + '.json');
+                fs.writeFileSync(file, JSON.stringify(data || [], null, 2));
+                console.log('Backed up ' + table + ': ' + (data || []).length + ' rows');
+              } catch (e) {
+                console.error('Failed to backup ' + table + ':', e.message);
+              }
+            }
+
+            // Write metadata
+            fs.writeFileSync(path.join(dir, '_metadata.json'), JSON.stringify({
+              timestamp: new Date().toISOString(),
+              tables: TABLES,
+            }, null, 2));
+
+            console.log('Backup complete!');
+          }
+
+          backup().catch(e => { console.error(e); process.exit(1); });
+          "
+
+      - name: Upload backup artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: supabase-backup-${{ github.run_id }}
+          path: backup/
+          retention-days: 90

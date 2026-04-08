@@ -1142,14 +1142,15 @@ input:focus, select:focus { border-color: var(--orange); box-shadow: 0 0 0 3px r
   .sidebar       { display: none; }
   .app-main      { margin-left: 0; }
   .mobile-bottom-bar { display: flex; }
-  .app-wrap      { max-width: 100%; padding: 14px 14px 80px; }
-  .app-main .app-wrap { padding: 14px 14px 80px; }
+  .app-wrap      { max-width: 100%; padding: 14px 16px 88px; }
+  .app-main .app-wrap { padding: 14px 16px 88px; }
   .grid-3        { grid-template-columns: 1fr 1fr; }
-  .code-grid     { max-height: 320px; }
+  .code-grid     { max-height: 380px; }
   .rate-table-wrap { max-height: 500px; }
   .total-amount  { font-size: 34px; }
   .app-header    { flex-wrap: wrap; gap: 8px; }
-  .grouped-nav   { display: flex; } /* show grouped nav on mobile as fallback */
+  .grouped-nav   { display: flex; }
+  .revenue-card  { padding: 16px; }
 }
 
 /* Mobile */
@@ -1157,7 +1158,7 @@ input:focus, select:focus { border-color: var(--orange); box-shadow: 0 0 0 3px r
   .grid-2       { grid-template-columns: 1fr; }
   .grid-3       { grid-template-columns: 1fr; }
   .total-amount { font-size: 28px; }
-  .app-wrap     { padding: 10px 10px 100px; }
+  .app-wrap     { padding: 12px 12px 100px; }
   .header-title { font-size: 14px; }
   .header-org   { display: none; }
   .header-logo  { width: 36px; height: 36px; }
@@ -1167,28 +1168,51 @@ input:focus, select:focus { border-color: var(--orange); box-shadow: 0 0 0 3px r
   .header-name  { font-size: 12px; }
   .nav-tab      { padding: 6px 12px; font-size: 12px; }
   .section-head { font-size: 18px; }
-  .code-grid    { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); max-height: 260px; }
-  .code-btn     { min-height: 60px; padding: 8px; }
-  .code-btn-title { font-size: 12px; }
-  .code-btn-desc  { font-size: 10px; }
+
+  /* Code grid — bigger touch targets, 2 columns */
+  .code-grid    { grid-template-columns: repeat(2, 1fr); max-height: 340px; gap: 6px; }
+  .code-btn     { min-height: 68px; padding: 10px; }
+  .code-btn-title { font-size: 14px; }
+  .code-btn-desc  { font-size: 11px; }
+  .code-btn-rate  { font-size: 13px; }
+
   .rate-table-wrap { max-height: 400px; }
   .rate-table th, .rate-table td { padding: 6px 8px; font-size: 12px; }
-  .btn          { padding: 10px 16px; font-size: 14px; }
-  .btn-sm       { padding: 7px 12px; font-size: 12px; }
+
+  /* Buttons — larger touch targets */
+  .btn          { padding: 12px 18px; font-size: 15px; min-height: 44px; }
+  .btn-sm       { padding: 8px 14px; font-size: 13px; min-height: 38px; }
+  .btn-full     { padding: 14px 20px; }
+
   .grouped-nav { gap: 3px; }
-  .nav-group-btn { padding: 6px 10px; font-size: 12px; }
+  .nav-group-btn { padding: 6px 10px; font-size: 12px; min-height: 40px; }
   .nav-group-label { display: none; }
   .nav-group-icon { font-size: 18px; }
   .nav-group-arrow { display: none; }
-  .nav-dropdown { min-width: 160px; }
-  .action-card { padding: 16px 12px; }
-  .group-pill   { padding: 6px 10px; font-size: 12px; }
-  .mode-btn     { padding: 8px 6px; font-size: 13px; }
+  .nav-dropdown { min-width: 180px; }
+  .action-card { padding: 18px 14px; }
+  .group-pill   { padding: 8px 12px; font-size: 13px; min-height: 36px; }
+  .mode-btn     { padding: 10px 8px; font-size: 14px; min-height: 44px; }
   .card         { padding: 14px; }
   .card-surface { padding: 14px; }
   .field-label  { font-size: 10px; }
   .login-logo img { width: 70px; height: 70px; }
   .login-title  { font-size: 19px; }
+
+  /* Revenue card on mobile */
+  .revenue-card { padding: 16px 14px; border-radius: 14px; }
+  .revenue-card .total-amount { font-size: 32px; }
+
+  /* Chips — easier to tap */
+  .chip { min-height: 36px; padding: 6px 14px; font-size: 14px; }
+
+  /* Mobile bottom bar — bigger touch targets */
+  .mobile-tab { padding: 6px 12px; min-height: 48px; }
+  .mobile-tab-icon { font-size: 22px; }
+  .mobile-tab-label { font-size: 11px; }
+
+  /* Optimization tips */
+  .optimization-tip { padding: 12px 14px; font-size: 13px; }
 }
 
 /* ── Print ── */

@@ -51,9 +51,10 @@ export default function Dashboard() {
     const map = {};
     visits.forEach(v => {
       const prov = v.provider || 'Unassigned';
-      if (!map[prov]) map[prov] = { total: 0, count: 0 };
+      if (!map[prov]) map[prov] = { total: 0, count: 0, totalCodes: 0 };
       map[prov].total += Number(v.total || 0);
       map[prov].count += 1;
+      map[prov].totalCodes += (v.codes || []).length;
     });
     return Object.entries(map)
       .map(([prov, d]) => {
@@ -62,10 +63,30 @@ export default function Dashboard() {
           : prov.includes('(COTA)') ? 'COTA'
           : prov.includes('(PTA)') ? 'PTA'
           : 'PT';
-        return { provider: prov, location: info?.location || '', type, total: d.total, count: d.count, avg: d.count > 0 ? d.total / d.count : 0 };
+        return {
+          provider: prov, location: info?.location || '', type,
+          total: d.total, count: d.count,
+          avg: d.count > 0 ? d.total / d.count : 0,
+          avgCodes: d.count > 0 ? d.totalCodes / d.count : 0,
+        };
       })
       .sort((a, b) => b.avg - a.avg);
   }, [visits, allProviders]);
+
+  // Team averages for comparison
+  const teamAvgRevPerVisit = useMemo(() => {
+    if (revenueByProvider.length === 0) return 0;
+    const totalRev = revenueByProvider.reduce((s, r) => s + r.total, 0);
+    const totalVis = revenueByProvider.reduce((s, r) => s + r.count, 0);
+    return totalVis > 0 ? totalRev / totalVis : 0;
+  }, [revenueByProvider]);
+
+  const teamAvgCodesPerVisit = useMemo(() => {
+    if (revenueByProvider.length === 0) return 0;
+    const totalCodes = revenueByProvider.reduce((s, r) => s + r.avgCodes * r.count, 0);
+    const totalVis = revenueByProvider.reduce((s, r) => s + r.count, 0);
+    return totalVis > 0 ? totalCodes / totalVis : 0;
+  }, [revenueByProvider]);
 
   // ── Revenue by Discipline (PT vs OT vs COTA vs PTA) ──
   const revenueByDiscipline = useMemo(() => {
@@ -179,30 +200,47 @@ export default function Dashboard() {
         {revenueByProvider.length === 0 ? (
           <div style={{ color: '#9ca3af', textAlign: 'center', padding: 16 }}>No visit data yet. Log visits in the Calculator to see analytics.</div>
         ) : (
+          <>
+          <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 10, display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+            <span>Team avg: <strong style={{ color: '#FF8200' }}>${teamAvgRevPerVisit.toFixed(2)}/visit</strong></span>
+            <span>Team avg: <strong style={{ color: '#FF8200' }}>{teamAvgCodesPerVisit.toFixed(1)} codes/visit</strong></span>
+          </div>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
             <thead>
               <tr style={{ borderBottom: '2px solid #e5e7eb' }}>
                 <th style={{ textAlign: 'left', padding: '8px 10px', fontWeight: 700, color: '#6b7280', fontSize: 11, textTransform: 'uppercase' }}>Therapist</th>
                 <th style={{ textAlign: 'center', padding: '8px 6px', fontWeight: 700, color: '#6b7280', fontSize: 11, textTransform: 'uppercase' }}>Type</th>
-                <th style={{ textAlign: 'center', padding: '8px 6px', fontWeight: 700, color: '#6b7280', fontSize: 11, textTransform: 'uppercase' }}>Location</th>
                 <th style={{ textAlign: 'right', padding: '8px 6px', fontWeight: 700, color: '#6b7280', fontSize: 11, textTransform: 'uppercase' }}>Visits</th>
-                <th style={{ textAlign: 'right', padding: '8px 6px', fontWeight: 700, color: '#6b7280', fontSize: 11, textTransform: 'uppercase' }}>Total</th>
-                <th style={{ textAlign: 'right', padding: '8px 10px', fontWeight: 700, color: '#6b7280', fontSize: 11, textTransform: 'uppercase' }}>Avg/Visit</th>
+                <th style={{ textAlign: 'right', padding: '8px 6px', fontWeight: 700, color: '#6b7280', fontSize: 11, textTransform: 'uppercase' }}>Codes/Visit</th>
+                <th style={{ textAlign: 'right', padding: '8px 6px', fontWeight: 700, color: '#6b7280', fontSize: 11, textTransform: 'uppercase' }}>Avg/Visit</th>
+                <th style={{ textAlign: 'right', padding: '8px 10px', fontWeight: 700, color: '#6b7280', fontSize: 11, textTransform: 'uppercase' }}>vs Team</th>
               </tr>
             </thead>
             <tbody>
-              {revenueByProvider.map(r => (
-                <tr key={r.provider} style={{ borderBottom: '1px solid #f3f4f6' }}>
-                  <td style={{ padding: '8px 10px', fontWeight: 600 }}>{r.provider}</td>
-                  <td style={{ textAlign: 'center', padding: '8px 6px' }}><span className="badge" style={{ fontSize: 11 }}>{r.type}</span></td>
-                  <td style={{ textAlign: 'center', padding: '8px 6px', color: '#6b7280' }}>{r.location}</td>
-                  <td style={{ textAlign: 'right', padding: '8px 6px' }}>{r.count}</td>
-                  <td style={{ textAlign: 'right', padding: '8px 6px' }}>${r.total.toFixed(2)}</td>
-                  <td style={{ textAlign: 'right', padding: '8px 10px', fontWeight: 700, color: '#FF8200' }}>${r.avg.toFixed(2)}</td>
-                </tr>
-              ))}
+              {revenueByProvider.map(r => {
+                const diff = r.avg - teamAvgRevPerVisit;
+                const diffColor = diff >= 0 ? '#16a34a' : '#dc2626';
+                return (
+                  <tr key={r.provider} style={{ borderBottom: '1px solid #f3f4f6' }}>
+                    <td style={{ padding: '8px 10px', fontWeight: 600 }}>
+                      {r.provider}
+                      <div style={{ fontSize: 11, color: '#9ca3af', fontWeight: 400 }}>{r.location}</div>
+                    </td>
+                    <td style={{ textAlign: 'center', padding: '8px 6px' }}><span className="badge" style={{ fontSize: 11 }}>{r.type}</span></td>
+                    <td style={{ textAlign: 'right', padding: '8px 6px' }}>{r.count}</td>
+                    <td style={{ textAlign: 'right', padding: '8px 6px', color: r.avgCodes < teamAvgCodesPerVisit ? '#dc2626' : '#1a1a1a', fontWeight: r.avgCodes < teamAvgCodesPerVisit ? 700 : 400 }}>
+                      {r.avgCodes.toFixed(1)}
+                    </td>
+                    <td style={{ textAlign: 'right', padding: '8px 6px', fontWeight: 700, color: '#FF8200' }}>${r.avg.toFixed(2)}</td>
+                    <td style={{ textAlign: 'right', padding: '8px 10px', fontWeight: 700, fontSize: 12, color: diffColor }}>
+                      {diff >= 0 ? '+' : ''}{diff.toFixed(2)}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
+          </>
         )}
       </div>
 
