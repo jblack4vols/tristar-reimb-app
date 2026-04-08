@@ -93,6 +93,7 @@ let realtimeChannel = null;
 
 export function startRealtimeSync() {
   if (realtimeChannel) return; // already subscribed
+  try {
   realtimeChannel = supabase
     .channel('rate-changes')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'rates' }, (payload) => {
@@ -118,6 +119,9 @@ export function startRealtimeSync() {
       });
     })
     .subscribe();
+  } catch {
+    // Realtime not available — app works fine without it
+  }
 }
 
 export function stopRealtimeSync() {

@@ -116,7 +116,7 @@ export default function App() {
       timeout,
     ]).then(async (result) => {
       setReady(true);
-      startRealtimeSync();
+      try { startRealtimeSync(); } catch { /* realtime optional */ }
       if (result === 'timeout') {
         console.warn('App init timed out — loading with cached/default data');
         const sess = store.getSession();

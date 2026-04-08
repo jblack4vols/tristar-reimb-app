@@ -1,5 +1,5 @@
 // Tristar PT Reimbursement Calculator — Service Worker
-const CACHE_VERSION = 'tristar-pt-v1';
+const CACHE_VERSION = 'tristar-pt-v2';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const DYNAMIC_CACHE = `${CACHE_VERSION}-dynamic`;
 
