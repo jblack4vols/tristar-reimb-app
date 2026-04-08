@@ -97,16 +97,16 @@ export function startRealtimeSync() {
     .channel('rate-changes')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'rates' }, (payload) => {
       if (!cache.rates) return;
-      const { new: row, eventType } = payload;
+      const { new: newRow, old: oldRow, eventType } = payload;
       if (eventType === 'DELETE') {
-        // Remove from cache
-        if (row.code && row.payer && cache.rates[row.code]) {
-          delete cache.rates[row.code][row.payer];
+        // DELETE events have data in payload.old, not payload.new
+        if (oldRow?.code && oldRow?.payer && cache.rates[oldRow.code]) {
+          delete cache.rates[oldRow.code][oldRow.payer];
         }
-      } else if (row.code && row.payer) {
+      } else if (newRow?.code && newRow?.payer) {
         // INSERT or UPDATE
-        if (!cache.rates[row.code]) cache.rates[row.code] = {};
-        cache.rates[row.code][row.payer] = Number(row.amount);
+        if (!cache.rates[newRow.code]) cache.rates[newRow.code] = {};
+        cache.rates[newRow.code][newRow.payer] = Number(newRow.amount);
       }
       notify();
     })
@@ -420,7 +420,8 @@ export async function importRatesCSV(csvString, user) {
   if (rows.length > 0) {
     // Batch upsert in chunks of 500
     for (let i = 0; i < rows.length; i += 500) {
-      await supabase.from('rates').upsert(rows.slice(i, i + 500), { onConflict: 'code,payer' });
+      const { error } = await supabase.from('rates').upsert(rows.slice(i, i + 500), { onConflict: 'code,payer' });
+      if (error) return { success: false, error: `Batch import failed at row ${i}: ${error.message}` };
     }
     // Refresh cache
     await loadAllData();

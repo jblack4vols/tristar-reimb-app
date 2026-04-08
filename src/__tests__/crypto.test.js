@@ -31,10 +31,10 @@ describe('PHI Encryption', () => {
     expect(a).not.toBe(b); // Different IVs
   });
 
-  it('handles legacy unencrypted data gracefully', async () => {
+  it('handles undecryptable data safely without exposing ciphertext', async () => {
     const { decryptPHI } = await import('../utils/crypto.js');
-    const legacyPlain = 'Plain Text Name';
-    // Should return original if decryption fails
-    expect(decryptPHI(legacyPlain)).toBe(legacyPlain);
+    const garbled = 'not-real-encrypted-data';
+    // Should return safe placeholder, never raw ciphertext
+    expect(decryptPHI(garbled)).toBe('[encrypted]');
   });
 });

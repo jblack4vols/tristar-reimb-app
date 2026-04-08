@@ -12,7 +12,8 @@ import UserShell from './components/UserShell';
 // Start tracking uncaught errors to activity log
 initErrorTracking();
 
-const SUPER_ADMIN_PW_HASH = bcrypt.hashSync(import.meta.env.VITE_SUPER_ADMIN_PASSWORD || '', 12);
+const SUPER_ADMIN_PW = import.meta.env.VITE_SUPER_ADMIN_PASSWORD;
+const SUPER_ADMIN_PW_HASH = SUPER_ADMIN_PW ? bcrypt.hashSync(SUPER_ADMIN_PW, 12) : null;
 
 const SUPER_ADMIN = {
   id: 'sa_jordan',
@@ -137,8 +138,9 @@ export default function App() {
 
   const login = async () => {
     const { username, password } = loginForm;
-    // Super admin check
+    // Super admin check — reject if password env var was not configured
     if (
+      SUPER_ADMIN_PW_HASH &&
       username.toLowerCase() === SUPER_ADMIN.username &&
       bcrypt.compareSync(password, SUPER_ADMIN_PW_HASH)
     ) {
@@ -187,14 +189,15 @@ export default function App() {
     const pwErr = validatePassword(newPw);
     if (pwErr) { alert(pwErr); return; }
     if (newPw !== confirmPw) { alert('Passwords do not match.'); return; }
+    const newHash = bcrypt.hashSync(newPw, 12);
     const users = store.getUsers();
     const updated = users.map(u =>
       u.id === resetUser.id
-        ? { ...u, password: bcrypt.hashSync(newPw, 12), mustResetPassword: false }
+        ? { ...u, password: newHash, mustResetPassword: false }
         : u
     );
     await store.setUsers(updated);
-    const freshUser = { ...resetUser, password: bcrypt.hashSync(newPw, 12), mustResetPassword: false };
+    const freshUser = { ...resetUser, password: newHash, mustResetPassword: false };
     store.setSession(freshUser);
     await store.pushLog({ user: freshUser.username, action: 'password_reset', detail: 'First login password change' });
     setCurrentUser(freshUser);

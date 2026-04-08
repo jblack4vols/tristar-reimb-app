@@ -22,7 +22,7 @@ async function logError(action, message, stack) {
     const detail = [
       message,
       stack ? `Stack: ${stack.slice(0, 500)}` : '',
-      `URL: ${window.location.href}`,
+      `URL: ${window.location.pathname}`,
       `UA: ${navigator.userAgent.slice(0, 100)}`,
     ].filter(Boolean).join(' | ');
 

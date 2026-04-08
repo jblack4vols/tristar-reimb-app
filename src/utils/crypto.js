@@ -37,9 +37,9 @@ export function decryptPHI(ciphertext) {
     const bytes = CryptoJS.AES.decrypt(ciphertext, ENC_KEY);
     const result = bytes.toString(CryptoJS.enc.Utf8);
     if (result) return result;
-    // Unencrypted legacy data
-    return ciphertext;
+    // Could not decrypt — return empty rather than exposing ciphertext
+    return '[encrypted]';
   } catch {
-    return ciphertext;
+    return '[encrypted]';
   }
 }

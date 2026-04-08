@@ -36,7 +36,9 @@ export async function loadStore() {
     }));
     storeLoaded = true;
     notifyStore();
-    try { localStorage.setItem('trc_offline_store', JSON.stringify({ usersCache, combosCache, logCache })); } catch { /* localStorage may be full or unavailable */ }
+    // Strip passwords before writing to localStorage — never persist credential data in browser storage
+    const safeUsers = usersCache.map(({ password: _, ...u }) => u);
+    try { localStorage.setItem('trc_offline_store', JSON.stringify({ usersCache: safeUsers, combosCache, logCache })); } catch { /* localStorage may be full or unavailable */ }
   } catch (err) {
     console.warn('Supabase loadStore failed, attempting offline fallback:', err);
     const offline = localStorage.getItem('trc_offline_store');
@@ -84,6 +86,7 @@ export const store = {
     usersCache = rows.map(r => ({
       id: r.id, name: r.name, username: r.username, password: r.password,
       email: r.email, location: r.location, role: r.role, active: r.active,
+      mustResetPassword: r.must_reset_password || false,
     }));
     notifyStore();
   },
@@ -119,7 +122,8 @@ export const store = {
       action: entry.action || '',
       detail: entry.detail || '',
     };
-    const { data } = await supabase.from('activity_log').insert(row).select().single();
+    const { data, error } = await supabase.from('activity_log').insert(row).select().single();
+    if (error) console.error('Audit log write failed:', error);
     const cached = {
       user: row.username, action: row.action, detail: row.detail,
       ts: data?.ts || new Date().toISOString(),
