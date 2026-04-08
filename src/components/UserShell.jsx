@@ -2,12 +2,14 @@ import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import Header from './Header';
 import GroupedNav from './GroupedNav';
 import Sidebar, { MobileBottomBar } from './Sidebar';
-import GlobalSearch from './GlobalSearch';
-import OnboardingTour from './OnboardingTour';
 import HomePage from './HomePage';
 import ViewErrorBoundary from './ViewErrorBoundary';
 import { supabase } from '../utils/supabase';
 import { decryptPHI } from '../utils/crypto';
+
+// Lazy-loaded overlays — only needed on demand
+const GlobalSearch = lazy(() => import('./GlobalSearch'));
+const OnboardingTour = lazy(() => import('./OnboardingTour'));
 
 const CalcView = lazy(() => import('./CalcView'));
 const NewVisitFlow = lazy(() => import('./NewVisitFlow'));
@@ -43,7 +45,7 @@ export default function UserShell({ user, onLogout }) {
         const names = [...new Set((data || []).map(e => decryptPHI(e.patient_name)).filter(Boolean))].slice(0, 5);
         setRecentPatients(names);
       });
-  }, [tab]);
+  }, [user.username]);
 
   const handleKeyboard = useCallback((e) => {
     if ((e.ctrlKey || e.metaKey) && e.key === 'k') { e.preventDefault(); setSearchOpen(true); }
@@ -61,13 +63,15 @@ export default function UserShell({ user, onLogout }) {
 
   return (
     <>
-      {showOnboarding && (
-        <OnboardingTour
-          onComplete={() => setShowOnboarding(false)}
-          onNavigate={(t) => { setTab(t); setShowOnboarding(false); }}
-        />
-      )}
-      <GlobalSearch isOpen={searchOpen} onClose={() => setSearchOpen(false)} onNavigate={searchNavigate} />
+      <Suspense fallback={null}>
+        {showOnboarding && (
+          <OnboardingTour
+            onComplete={() => setShowOnboarding(false)}
+            onNavigate={(t) => { setTab(t); setShowOnboarding(false); }}
+          />
+        )}
+        <GlobalSearch isOpen={searchOpen} onClose={() => setSearchOpen(false)} onNavigate={searchNavigate} />
+      </Suspense>
 
       <div className="app-layout">
         <Sidebar activeTab={tab} onTabChange={setTab} isAdmin={false} onSearchClick={() => setSearchOpen(true)} onLogout={onLogout} userName={user.name} />

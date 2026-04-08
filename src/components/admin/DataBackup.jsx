@@ -3,7 +3,13 @@ import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 import { supabase } from '../../utils/supabase';
 import { decryptPHI } from '../../utils/crypto';
+import { store } from '../../utils/store';
 import * as ds from '../../utils/adminDataStore';
+
+const PHI_TABLES = [
+  { key: 'billing_entries', table: 'billing_entries', order: 'visit_date', decryptFields: ['patient_name', 'notes'] },
+  { key: 'patients', table: 'patients', order: 'created_at', decryptFields: ['encrypted_name', 'notes'] },
+];
 
 const TABLES = [
   { key: 'rates', table: 'rates', order: 'code' },
@@ -16,8 +22,8 @@ const TABLES = [
   { key: 'app_users', table: 'app_users', order: 'name', excludeCols: ['password'] },
   { key: 'combos', table: 'combos', order: 'saved_at' },
   { key: 'activity_log', table: 'activity_log', order: 'ts' },
-  { key: 'billing_entries', table: 'billing_entries', order: 'visit_date', decryptFields: ['patient_name', 'notes'] },
-  { key: 'patients', table: 'patients', order: 'created_at', decryptFields: ['encrypted_name', 'notes'] },
+  { key: 'billing_entries', table: 'billing_entries', order: 'visit_date' },
+  { key: 'patients', table: 'patients', order: 'created_at' },
   { key: 'authorizations', table: 'authorizations', order: 'created_at' },
   { key: 'treatment_templates', table: 'treatment_templates', order: 'name' },
 ];
@@ -46,8 +52,9 @@ export default function DataBackup({ user }) {
   const [tableCounts, setTableCounts] = useState(null);
   const [error, setError] = useState(null);
   const [ratesExporting, setRatesExporting] = useState(false);
+  const [phiExporting, setPhiExporting] = useState(false);
 
-  /* ───── Full backup ───── */
+  /* ───── Full backup (PHI stays encrypted) ───── */
   const handleFullBackup = async () => {
     setExporting(true);
     setProgress(0);
@@ -145,6 +152,47 @@ export default function DataBackup({ user }) {
     }
   };
 
+  /* ───── Decrypted PHI export (HIPAA-gated) ───── */
+  const handleDecryptedExport = async () => {
+    const confirmed = confirm(
+      'WARNING: This will export patient names and notes in PLAINTEXT.\n\n' +
+      'This file contains Protected Health Information (PHI).\n' +
+      'You are responsible for storing it securely and deleting it after use.\n\n' +
+      'Continue?'
+    );
+    if (!confirmed) return;
+
+    setPhiExporting(true);
+    setError(null);
+    try {
+      const zip = new JSZip();
+      for (const t of PHI_TABLES) {
+        const { data, error: fetchErr } = await supabase
+          .from(t.table).select('*').order(t.order || 'id');
+        if (fetchErr) { console.warn(`Failed to fetch ${t.key}:`, fetchErr.message); continue; }
+        let rows = data || [];
+        if (t.decryptFields && rows.length > 0) {
+          rows = rows.map(row => {
+            const dec = { ...row };
+            t.decryptFields.forEach(field => {
+              if (dec[field]) dec[field] = decryptPHI(dec[field]);
+            });
+            return dec;
+          });
+        }
+        if (rows.length > 0) zip.file(`${t.key}_decrypted.csv`, arrayToCSV(rows));
+      }
+      const blob = await zip.generateAsync({ type: 'blob' });
+      const today = new Date().toISOString().slice(0, 10);
+      saveAs(blob, `tristar-phi-decrypted-${today}.zip`);
+      await store.pushLog({ user: user?.username, action: 'backup_phi_export', detail: 'Decrypted PHI export downloaded' });
+    } catch (err) {
+      setError(`Decrypted export failed: ${err.message}`);
+    } finally {
+      setPhiExporting(false);
+    }
+  };
+
   return (
     <div className="card" style={{ maxWidth: 800 }}>
       <h2 className="section-head">Data Backup</h2>
@@ -157,8 +205,8 @@ export default function DataBackup({ user }) {
 
       {/* HIPAA Warning */}
       <div className="alert-warning" style={{ marginBottom: 20 }}>
-        <strong>HIPAA Notice:</strong> This backup contains PHI (Protected Health Information).
-        Store securely per HIPAA guidelines. Do not share via unencrypted email or unsecured storage.
+        <strong>HIPAA Notice:</strong> Patient data in the standard backup is exported in encrypted format.
+        Use "Export Decrypted PHI" only when plaintext names are required — store securely and delete after use.
       </div>
 
       {/* ── Full Backup ── */}
@@ -229,6 +277,22 @@ export default function DataBackup({ user }) {
             </div>
           </div>
         )}
+      </div>
+
+      {/* ── Decrypted PHI Export ── */}
+      <div className="card-surface" style={{ marginBottom: 20, padding: 16, borderLeft: '3px solid #b71c1c' }}>
+        <h3 style={{ margin: '0 0 8px', color: '#b71c1c' }}>Export Decrypted PHI</h3>
+        <p style={{ margin: '0 0 12px', fontSize: 14, opacity: 0.8 }}>
+          Export patient names and notes in plaintext. This action is logged for HIPAA audit compliance.
+        </p>
+        <button
+          className="btn btn-sm"
+          style={{ background: '#b71c1c', color: '#fff', border: 'none' }}
+          onClick={handleDecryptedExport}
+          disabled={phiExporting}
+        >
+          {phiExporting ? 'Exporting...' : 'Export Decrypted PHI'}
+        </button>
       </div>
 
       {/* ── Rates Only ── */}

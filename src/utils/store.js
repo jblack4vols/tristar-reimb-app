@@ -16,10 +16,9 @@ function notifyStore() {
 // ── Initial load from Supabase ─────────────────────────
 export async function loadStore() {
   try {
-    const [usersRes, combosRes, logRes] = await Promise.all([
+    const [usersRes, combosRes] = await Promise.all([
       supabase.from('app_users').select('*').order('created_at'),
       supabase.from('combos').select('*').order('saved_at', { ascending: false }),
-      supabase.from('activity_log').select('*').order('ts', { ascending: false }).limit(300),
     ]);
     usersCache = (usersRes.data || []).map(u => ({
       id: u.id, name: u.name, username: u.username, password: u.password,
@@ -31,14 +30,11 @@ export async function loadStore() {
       provider: c.provider || '', owner: c.owner || '', ownerId: c.owner_id || '',
       savedAt: c.saved_at,
     }));
-    logCache = (logRes.data || []).map(l => ({
-      user: l.username, action: l.action, detail: l.detail || '', ts: l.ts,
-    }));
     storeLoaded = true;
     notifyStore();
     // Strip passwords before writing to localStorage — never persist credential data in browser storage
     const safeUsers = usersCache.map(({ password: _, ...u }) => u);
-    try { localStorage.setItem('trc_offline_store', JSON.stringify({ usersCache: safeUsers, combosCache, logCache })); } catch { /* localStorage may be full or unavailable */ }
+    try { localStorage.setItem('trc_offline_store', JSON.stringify({ usersCache: safeUsers, combosCache })); } catch { /* localStorage may be full or unavailable */ }
   } catch (err) {
     console.warn('Supabase loadStore failed, attempting offline fallback:', err);
     const offline = localStorage.getItem('trc_offline_store');
@@ -56,6 +52,23 @@ export async function loadStore() {
 }
 
 export function isStoreLoaded() { return storeLoaded; }
+
+// ── Deferred: load activity log on demand ──────────────
+export async function loadActivityLog() {
+  try {
+    const { data } = await supabase
+      .from('activity_log')
+      .select('*')
+      .order('ts', { ascending: false })
+      .limit(300);
+    logCache = (data || []).map(l => ({
+      user: l.username, action: l.action, detail: l.detail || '', ts: l.ts,
+    }));
+    notifyStore();
+  } catch (err) {
+    console.warn('Failed to load activity log:', err);
+  }
+}
 
 // ── Users ──────────────────────────────────────────────
 export const store = {

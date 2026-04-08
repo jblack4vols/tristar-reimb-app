@@ -2,12 +2,15 @@ import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import Header from './Header';
 import GroupedNav from './GroupedNav';
 import Sidebar, { MobileBottomBar } from './Sidebar';
-import GlobalSearch from './GlobalSearch';
-import OnboardingTour from './OnboardingTour';
 import HomePage from './HomePage';
 import ViewErrorBoundary from './ViewErrorBoundary';
 import { supabase } from '../utils/supabase';
 import { decryptPHI } from '../utils/crypto';
+import { loadAdminData } from '../utils/adminDataStore';
+
+// Lazy-loaded overlays — only needed on demand
+const GlobalSearch = lazy(() => import('./GlobalSearch'));
+const OnboardingTour = lazy(() => import('./OnboardingTour'));
 
 // Core views — used by most sessions
 const CalcView = lazy(() => import('./CalcView'));
@@ -55,6 +58,9 @@ export default function AdminShell({ user, onLogout }) {
   const [showOnboarding, setShowOnboarding] = useState(() => !localStorage.getItem('trc_onboarding_done'));
   const badge = user.role === 'superadmin' ? 'Super Admin' : 'Admin';
 
+  // Load admin-only data (billing rules, code labels, code groups) on mount
+  useEffect(() => { loadAdminData(); }, []);
+
   const [templateCodes, setTemplateCodes] = useState(null);
   const applyTemplate = (codes) => { setTemplateCodes(codes); setTab('calc'); };
 
@@ -69,7 +75,7 @@ export default function AdminShell({ user, onLogout }) {
         const names = [...new Set((data || []).map(e => decryptPHI(e.patient_name)).filter(Boolean))].slice(0, 5);
         setRecentPatients(names);
       });
-  }, [tab]);
+  }, [user.username]);
 
   // Keyboard shortcuts
   const handleKeyboard = useCallback((e) => {
@@ -92,13 +98,15 @@ export default function AdminShell({ user, onLogout }) {
 
   return (
     <>
-      {showOnboarding && (
-        <OnboardingTour
-          onComplete={() => setShowOnboarding(false)}
-          onNavigate={(t) => { setTab(t); setShowOnboarding(false); }}
-        />
-      )}
-      <GlobalSearch isOpen={searchOpen} onClose={() => setSearchOpen(false)} onNavigate={searchNavigate} />
+      <Suspense fallback={null}>
+        {showOnboarding && (
+          <OnboardingTour
+            onComplete={() => setShowOnboarding(false)}
+            onNavigate={(t) => { setTab(t); setShowOnboarding(false); }}
+          />
+        )}
+        <GlobalSearch isOpen={searchOpen} onClose={() => setSearchOpen(false)} onNavigate={searchNavigate} />
+      </Suspense>
 
       <div className="app-layout">
         <Sidebar activeTab={tab} onTabChange={setTab} isAdmin={true} onSearchClick={() => setSearchOpen(true)} onLogout={onLogout} userName={user.name} />

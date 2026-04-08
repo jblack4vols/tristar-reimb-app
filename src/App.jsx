@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import bcrypt from 'bcryptjs';
 import { initMsal, msalLogout } from './authConfig';
 import { store, loadStore } from './utils/store';
-import { loadAllData, startRealtimeSync } from './utils/adminDataStore';
+import { loadEssentialData, startRealtimeSync } from './utils/adminDataStore';
 import { initErrorTracking } from './utils/errorTracker';
 import { validatePassword } from './utils/validation';
 import LoginScreen from './components/LoginScreen';
@@ -13,12 +13,10 @@ import UserShell from './components/UserShell';
 initErrorTracking();
 
 const SUPER_ADMIN_PW = import.meta.env.VITE_SUPER_ADMIN_PASSWORD || 'Tristar2025!';
-const SUPER_ADMIN_PW_HASH = bcrypt.hashSync(SUPER_ADMIN_PW, 10);
 
 const SUPER_ADMIN = {
   id: 'sa_jordan',
   username: 'jordan',
-  password: SUPER_ADMIN_PW_HASH,
   name: 'Jordan Black',
   role: 'superadmin',
 };
@@ -109,7 +107,7 @@ export default function App() {
 
     const msalPromise = initMsal().catch(err => { console.error('MSAL init error:', err); return null; });
     const storePromise = loadStore().catch(err => console.error('Store load error:', err));
-    const dataPromise = loadAllData().catch(err => console.error('Data load error:', err));
+    const dataPromise = loadEssentialData().catch(err => console.error('Data load error:', err));
 
     Promise.race([
       Promise.all([storePromise, dataPromise, msalPromise]),
@@ -136,13 +134,21 @@ export default function App() {
     });
   }, []);
 
+  const superAdminHashRef = useRef(null);
+
   const login = async () => {
     const { username, password } = loginForm;
-    // Super admin check
-    if (
-      username.toLowerCase() === SUPER_ADMIN.username &&
-      bcrypt.compareSync(password, SUPER_ADMIN_PW_HASH)
-    ) {
+    // Super admin check — hash computed lazily on first login attempt
+    if (username.toLowerCase() === SUPER_ADMIN.username) {
+      if (!superAdminHashRef.current) {
+        superAdminHashRef.current = await bcrypt.hash(SUPER_ADMIN_PW, 10);
+      }
+      const isMatch = await bcrypt.compare(password, superAdminHashRef.current);
+      if (!isMatch) {
+        await store.pushLog({ user: username, action: 'login_fail' });
+        setLoginErr('Incorrect username or password, or your account is inactive.');
+        return;
+      }
       store.setSession(SUPER_ADMIN);
       await store.pushLog({ user: SUPER_ADMIN.username, action: 'login', detail: 'Super admin' });
       setCurrentUser(SUPER_ADMIN);

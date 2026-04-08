@@ -1,15 +1,8 @@
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useAdminData } from '../../utils/useAdminData';
+import { supabase } from '../../utils/supabase';
 
 const BRAND = '#FF8200';
-
-const VISIT_TEMPLATES = {
-  'Standard PT Visit': ['97110', '97140', '97530'],
-  'Eval + Treat': ['EVAL-62', '97110', '97140'],
-  'Aquatic Visit': ['97113', '97110'],
-  'Manual Therapy Focus': ['97140', '97530', '97110'],
-  'Dry Needling Visit': ['97799', '97110', '97140'],
-};
 
 const fmt = n => (n !== null && n !== undefined && !isNaN(n)) ? `$${Number(n).toFixed(2)}` : '\u2014';
 
@@ -20,6 +13,13 @@ export default function PayerComparison() {
   const [template, setTemplate] = useState('');
   const [showPayerPicker, setShowPayerPicker] = useState(false);
   const [showCodePicker, setShowCodePicker] = useState(false);
+  const [templates, setTemplates] = useState([]);
+
+  // Load treatment templates from DB
+  useEffect(() => {
+    supabase.from('treatment_templates').select('name, codes').order('name')
+      .then(({ data }) => setTemplates(data || []));
+  }, []);
 
   // All available code keys
   const allCodes = useMemo(() => {
@@ -48,9 +48,8 @@ export default function PayerComparison() {
   // Apply template
   const applyTemplate = (tplName) => {
     setTemplate(tplName);
-    if (VISIT_TEMPLATES[tplName]) {
-      setSelectedCodes(VISIT_TEMPLATES[tplName]);
-    }
+    const found = templates.find(t => t.name === tplName);
+    if (found) setSelectedCodes(found.codes || []);
   };
 
   // Build comparison data
@@ -145,18 +144,18 @@ export default function PayerComparison() {
           {/* Templates */}
           <div style={{ marginBottom: 8 }}>
             <span style={{ fontSize: 12, color: '#6b7280', marginRight: 6 }}>Templates:</span>
-            {Object.keys(VISIT_TEMPLATES).map(tpl => (
+            {templates.map(tpl => (
               <button
-                key={tpl}
+                key={tpl.name}
                 className={`btn btn-sm`}
                 style={{
                   marginRight: 4, marginBottom: 4, fontSize: 11,
-                  background: template === tpl ? BRAND : undefined,
-                  color: template === tpl ? '#fff' : undefined,
+                  background: template === tpl.name ? BRAND : undefined,
+                  color: template === tpl.name ? '#fff' : undefined,
                 }}
-                onClick={() => applyTemplate(tpl)}
+                onClick={() => applyTemplate(tpl.name)}
               >
-                {tpl}
+                {tpl.name}
               </button>
             ))}
           </div>

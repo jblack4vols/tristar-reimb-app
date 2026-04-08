@@ -9,72 +9,42 @@ function notify() {
   window.dispatchEvent(new Event('trc-data-updated'));
 }
 
-// ── Load all data from Supabase into cache ─────────────
-export async function loadAllData() {
+// ── Load essential data (rates, payers, providers) — needed by all users ──
+export async function loadEssentialData() {
   try {
-    const [ratesRes, payersRes, contractRes, providersRes, rulesRes, labelsRes, groupsRes] =
+    const [ratesRes, payersRes, contractRes, providersRes] =
       await Promise.all([
         supabase.from('rates').select('*'),
         supabase.from('payers').select('*').order('sort_order'),
         supabase.from('contract_payers').select('*').order('name'),
         supabase.from('providers').select('*').order('location, name'),
-        supabase.from('billing_rules').select('*').order('payer, sort_order'),
-        supabase.from('code_labels').select('*'),
-        supabase.from('code_groups').select('*').order('sort_order'),
       ]);
     // Load settings in parallel (non-blocking)
     loadSettings().catch(() => { /* settings optional */ });
 
-    // Build rates object: { code: { payer: amount } }
     const rates = {};
     for (const r of ratesRes.data || []) {
       if (!rates[r.code]) rates[r.code] = {};
       rates[r.code][r.payer] = Number(r.amount);
     }
-
-    // Payer names in order
     const payers = (payersRes.data || []).map(p => p.name);
-
-    // Contract payers: { name: rate }
     const contractPayers = {};
     for (const cp of contractRes.data || []) {
       contractPayers[cp.name] = Number(cp.rate);
     }
-
-    // Providers map: { location: [names] }
     const providersMap = {};
     for (const p of providersRes.data || []) {
       if (!providersMap[p.location]) providersMap[p.location] = [];
       providersMap[p.location].push(p.name);
     }
 
-    // Billing rules: { payer: [rules] }
-    const billingRules = {};
-    for (const r of rulesRes.data || []) {
-      if (!billingRules[r.payer]) billingRules[r.payer] = [];
-      billingRules[r.payer].push(r.rule_text);
-    }
-
-    // Code labels: { code: description }
-    const codeLabels = {};
-    for (const cl of labelsRes.data || []) {
-      codeLabels[cl.code] = cl.description;
-    }
-
-    // Code groups
-    const codeGroups = (groupsRes.data || []).map(g => ({
-      key: g.group_key,
-      label: g.label,
-      codes: g.codes || [],
-    }));
-
-    cache = { rates, payers, contractPayers, providersMap, billingRules, codeLabels, codeGroups };
+    cache = { ...cache, rates, payers, contractPayers, providersMap };
     loaded = true;
     notify();
     try { localStorage.setItem('trc_offline_data', JSON.stringify(cache)); } catch { /* localStorage may be full */ }
     return cache;
   } catch (err) {
-    console.warn('Supabase loadAllData failed, attempting offline fallback:', err);
+    console.warn('Supabase loadEssentialData failed, attempting offline fallback:', err);
     const offline = localStorage.getItem('trc_offline_data');
     if (offline) {
       cache = JSON.parse(offline);
@@ -84,6 +54,45 @@ export async function loadAllData() {
     }
     throw err;
   }
+}
+
+// ── Load admin-only data (billing rules, code labels, code groups) ──
+export async function loadAdminData() {
+  try {
+    const [rulesRes, labelsRes, groupsRes] = await Promise.all([
+      supabase.from('billing_rules').select('*').order('payer, sort_order'),
+      supabase.from('code_labels').select('*'),
+      supabase.from('code_groups').select('*').order('sort_order'),
+    ]);
+
+    const billingRules = {};
+    for (const r of rulesRes.data || []) {
+      if (!billingRules[r.payer]) billingRules[r.payer] = [];
+      billingRules[r.payer].push(r.rule_text);
+    }
+    const codeLabels = {};
+    for (const cl of labelsRes.data || []) {
+      codeLabels[cl.code] = cl.description;
+    }
+    const codeGroups = (groupsRes.data || []).map(g => ({
+      key: g.group_key,
+      label: g.label,
+      codes: g.codes || [],
+    }));
+
+    cache = { ...cache, billingRules, codeLabels, codeGroups };
+    notify();
+    try { localStorage.setItem('trc_offline_data', JSON.stringify(cache)); } catch { /* localStorage may be full */ }
+  } catch (err) {
+    console.warn('Failed to load admin data:', err);
+  }
+}
+
+// ── Load all data (convenience wrapper) ─────────────
+export async function loadAllData() {
+  await loadEssentialData();
+  await loadAdminData();
+  return cache;
 }
 
 export function isLoaded() { return loaded; }

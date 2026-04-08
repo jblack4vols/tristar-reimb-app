@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { store } from '../utils/store';
+import { useState, useEffect } from 'react';
+import { store, loadActivityLog } from '../utils/store';
 
 const ACTION_COLORS = {
   login:         '#1b5e20',
@@ -20,6 +20,11 @@ const ACTION_COLORS = {
 
 export default function ActivityLog({ user }) {
   const [log, setLog] = useState(() => store.getLog());
+
+  // Load activity log on demand (deferred from initial app load)
+  useEffect(() => {
+    loadActivityLog().then(() => setLog(store.getLog()));
+  }, []);
 
   const clearLog = async () => {
     if (!confirm('Clear all activity logs? This cannot be undone.')) return;

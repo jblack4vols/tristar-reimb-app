@@ -1,6 +1,4 @@
 import { useState, useEffect, useMemo } from 'react';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
 import { supabase } from '../../utils/supabase';
 import { useAdminData } from '../../utils/useAdminData';
 import { decryptPHI } from '../../utils/crypto';
@@ -25,6 +23,7 @@ export default function MonthlyReport() {
   const [year, setYear] = useState(getDefaultMonth().year);
   const [visits, setVisits] = useState([]);
   const [fetching, setFetching] = useState(false);
+  const [pdfLoading, setPdfLoading] = useState(false);
 
   // Fetch visits for selected month
   useEffect(() => {
@@ -113,7 +112,11 @@ export default function MonthlyReport() {
   const monthLabel = `${MONTHS[month]} ${year}`;
 
   // ── PDF Generation ────────────────────────────────
-  const downloadPDF = () => {
+  const downloadPDF = async () => {
+    setPdfLoading(true);
+    try {
+    const { default: jsPDF } = await import('jspdf');
+    const { default: autoTable } = await import('jspdf-autotable');
     const doc = new jsPDF();
     const { totalRevenue, totalVisits, avgPerVisit, uniquePatients, byLocation, byProvider, byPayer, topCodes } = reportData;
 
@@ -225,6 +228,9 @@ export default function MonthlyReport() {
     }
 
     doc.save(`tristar-monthly-report-${year}-${String(month + 1).padStart(2, '0')}.pdf`);
+    } finally {
+      setPdfLoading(false);
+    }
   };
 
   // ── Years range for selector ──────────────────────
@@ -255,8 +261,8 @@ export default function MonthlyReport() {
           >
             {years.map(y => <option key={y} value={y}>{y}</option>)}
           </select>
-          <button className="btn btn-primary" onClick={downloadPDF} disabled={fetching || totalVisits === 0}>
-            Download PDF
+          <button className="btn btn-primary" onClick={downloadPDF} disabled={fetching || pdfLoading || totalVisits === 0}>
+            {pdfLoading ? 'Preparing PDF...' : 'Download PDF'}
           </button>
         </div>
       </div>

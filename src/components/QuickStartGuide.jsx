@@ -70,17 +70,18 @@ export default function QuickStartGuide() {
         </div>
       </div>
 
-      {/* Authorizations */}
+      {/* Visit History */}
       <div className="card" style={{ marginBottom: 16 }}>
         <div style={{ fontSize: 18, fontWeight: 700, color: '#FF8200', marginBottom: 10 }}>
-          5. Tracking Authorizations
+          5. Visit History
         </div>
         <div style={{ fontSize: 14, color: '#374151', lineHeight: 1.7 }}>
-          <p style={{ marginBottom: 8 }}>Go to <strong>Clinical &gt; Authorizations</strong></p>
+          <p style={{ marginBottom: 8 }}>Go to <strong>History &gt; Visit History</strong></p>
           <ul style={{ paddingLeft: 20, margin: '8px 0' }}>
-            <li style={{ marginBottom: 6 }}>Add a new auth: select patient, approved visits, date range, auth number</li>
-            <li style={{ marginBottom: 6 }}>Track used vs remaining visits with color-coded progress bars</li>
-            <li style={{ marginBottom: 6 }}>Alerts show when auths are expiring or running low</li>
+            <li style={{ marginBottom: 6 }}>View all logged visits with date, payer, codes, and reimbursement totals</li>
+            <li style={{ marginBottom: 6 }}>Use quick date range presets (Today, This Week, This Month, Last 90 Days, All Time)</li>
+            <li style={{ marginBottom: 6 }}>Filter by payer, provider, or location</li>
+            <li style={{ marginBottom: 6 }}>Summary cards show total revenue, average per visit, and average codes</li>
           </ul>
         </div>
       </div>
