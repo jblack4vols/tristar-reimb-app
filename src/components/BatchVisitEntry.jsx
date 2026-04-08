@@ -246,9 +246,8 @@ export default function BatchVisitEntry({ user }) {
         )}
 
         {/* ── Table ── */}
-        <div className="rate-table-wrap" style={{ overflow: 'visible' }}>
-          <div style={{ overflowX: 'auto' }}>
-          <table className="rate-table" style={{ minWidth: 900 }}>
+        <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', marginBottom: 16 }}>
+          <table style={{ width: '100%', minWidth: 900, borderCollapse: 'collapse', fontSize: 13 }}>
             <thead>
               <tr>
                 <th style={{ minWidth: 180 }}>Patient</th>
@@ -269,7 +268,7 @@ export default function BatchVisitEntry({ user }) {
                 return (
                   <tr key={row.id}>
                     {/* Patient */}
-                    <td style={{ position: 'relative' }}>
+                    <td style={{ padding: '6px 8px', verticalAlign: 'top' }}>
                       {row.patient ? (
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                           <span style={{
@@ -292,58 +291,63 @@ export default function BatchVisitEntry({ user }) {
                           </button>
                         </div>
                       ) : (
-                        <div>
+                        <div style={{ position: 'relative' }}>
                           <input
                             type="text"
                             placeholder="Search patient..."
                             value={row.patientSearch}
                             onChange={e => updateRow(row.id, { patientSearch: e.target.value })}
+                            autoComplete="off"
                             style={{
                               width: '100%',
-                              padding: '4px 8px',
+                              padding: '6px 8px',
                               fontSize: 13,
                               border: rowErrs.includes('patient') ? '2px solid #ef4444' : '1px solid #d1d5db',
-                              borderRadius: 4,
+                              borderRadius: 6,
                             }}
                           />
-                          {row.patientSearch.trim().length > 0 && (
-                            <div style={{
-                              position: 'absolute',
-                              top: '100%',
-                              left: 0,
-                              right: 0,
-                              background: '#fff',
-                              border: '1px solid #d1d5db',
-                              borderRadius: 6,
-                              boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
-                              zIndex: 50,
-                              maxHeight: 180,
-                              overflow: 'auto',
-                            }}>
-                              {getFilteredPatients(row.patientSearch).map(p => (
-                                <div
-                                  key={p.id}
-                                  onClick={() => selectPatient(row.id, p)}
-                                  style={{
-                                    padding: '6px 10px',
-                                    cursor: 'pointer',
-                                    fontSize: 13,
-                                    borderBottom: '1px solid #f3f4f6',
-                                  }}
-                                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,130,0,0.08)'}
-                                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                                >
-                                  <div style={{ fontWeight: 600 }}>{p.name}</div>
-                                  {p.payer && <span className="badge" style={{ fontSize: 10 }}>{p.payer}</span>}
-                                </div>
-                              ))}
-                              {getFilteredPatients(row.patientSearch).length === 0 && (
-                                <div style={{ padding: '8px 10px', fontSize: 12, color: '#9ca3af' }}>
-                                  No matches
-                                </div>
-                              )}
-                            </div>
-                          )}
+                          {row.patientSearch.trim().length > 0 && (() => {
+                            const results = getFilteredPatients(row.patientSearch);
+                            return (
+                              <div style={{
+                                position: 'absolute',
+                                top: '100%',
+                                left: 0,
+                                width: 240,
+                                background: '#fff',
+                                border: '1.5px solid #e5e7eb',
+                                borderRadius: 10,
+                                boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
+                                zIndex: 9999,
+                                maxHeight: 220,
+                                overflow: 'auto',
+                                marginTop: 4,
+                              }}>
+                                {results.length > 0 ? results.map(p => (
+                                  <div
+                                    key={p.id}
+                                    onClick={() => selectPatient(row.id, p)}
+                                    style={{
+                                      padding: '8px 12px',
+                                      cursor: 'pointer',
+                                      fontSize: 13,
+                                      borderBottom: '1px solid #f3f4f6',
+                                      transition: 'background 0.1s',
+                                    }}
+                                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,130,0,0.06)'}
+                                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                                  >
+                                    <div style={{ fontWeight: 600 }}>{p.name}</div>
+                                    {p.payer && <span className="badge" style={{ fontSize: 10 }}>{p.payer}</span>}
+                                  </div>
+                                )) : (
+                                  <div style={{ padding: '10px 12px', fontSize: 12, color: '#9ca3af' }}>
+                                    No patients found
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })()}
                         </div>
                       )}
                     </td>
@@ -405,7 +409,7 @@ export default function BatchVisitEntry({ user }) {
                     </td>
 
                     {/* Codes */}
-                    <td style={{ position: 'relative' }}>
+                    <td style={{ padding: '6px 8px', verticalAlign: 'top', position: 'relative' }}>
                       <div style={{
                         display: 'flex',
                         flexWrap: 'wrap',
@@ -566,7 +570,6 @@ export default function BatchVisitEntry({ user }) {
               </tr>
             </tfoot>
           </table>
-          </div>
         </div>
 
         {/* Validation summary */}
