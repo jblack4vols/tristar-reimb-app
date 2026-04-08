@@ -30,7 +30,7 @@ export default function RateHistory() {
       )
     : changes;
 
-  const fmt = (v) => v == null ? '—' : `$${Number(v).toFixed(2)}`;
+  const fmt = (v) => v === null || v === undefined ? '\u2014' : `$${Number(v).toFixed(2)}`;
 
   return (
     <div>

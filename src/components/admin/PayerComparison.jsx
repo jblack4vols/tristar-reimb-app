@@ -12,7 +12,7 @@ const VISIT_TEMPLATES = {
   'Dry Needling Visit': ['97799', '97110', '97140'],
 };
 
-const fmt = n => (n != null && !isNaN(n)) ? `$${Number(n).toFixed(2)}` : '—';
+const fmt = n => (n !== null && n !== undefined && !isNaN(n)) ? `$${Number(n).toFixed(2)}` : '\u2014';
 
 export default function PayerComparison() {
   const { rates, payers, codeLabels, codeGroups, loading } = useAdminData();

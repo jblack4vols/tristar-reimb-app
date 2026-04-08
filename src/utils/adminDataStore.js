@@ -69,7 +69,7 @@ export async function loadAllData() {
     cache = { rates, payers, contractPayers, providersMap, billingRules, codeLabels, codeGroups };
     loaded = true;
     notify();
-    try { localStorage.setItem('trc_offline_data', JSON.stringify(cache)); } catch {}
+    try { localStorage.setItem('trc_offline_data', JSON.stringify(cache)); } catch { /* localStorage may be full */ }
     return cache;
   } catch (err) {
     console.warn('Supabase loadAllData failed, attempting offline fallback:', err);

@@ -124,7 +124,7 @@ function EditableCell({ value, onSave }) {
       }}
       title="Click to edit"
     >
-      {value != null ? `$${Number(value).toFixed(2)}` : '--'}
+      {value !== null && value !== undefined ? `$${Number(value).toFixed(2)}` : '--'}
     </span>
   );
 }
