@@ -7,6 +7,7 @@ import { encryptPHI } from '../utils/crypto';
 import EightMinuteRule from './EightMinuteRule';
 import BillingAlerts from './BillingAlerts';
 import PdfExport from './PdfExport';
+import { getOptimizationSuggestions } from '../utils/billingOptimizer';
 
 export default function CalcView({ user, templateCodes, selectedPatient, onClearTemplate, onClearPatient }) {
   const { loading: dataLoading, rates: RATES, payers: PAYERS, contractPayers: CONTRACT_PAYERS,
@@ -119,6 +120,11 @@ export default function CalcView({ user, templateCodes, selectedPatient, onClear
     [codes, payer, mode]
   );
 
+  const suggestions = useMemo(() =>
+    getOptimizationSuggestions(codes, payer, RATES),
+    [codes, payer, RATES]
+  );
+
   const toggle = c => setCodes(p => p.includes(c) ? p.filter(x => x !== c) : [...p, c]);
 
   const favCodes = useMemo(() => {
@@ -154,11 +160,31 @@ export default function CalcView({ user, templateCodes, selectedPatient, onClear
     showToast(`"${n}" saved!`);
   };
 
-  if (dataLoading) return <div style={{ textAlign: 'center', padding: '2rem', color: '#9ca3af' }}>Loading rates…</div>;
+  if (dataLoading) return <div style={{ textAlign: 'center', padding: '2rem', color: '#9ca3af' }}>Loading rates...</div>;
 
   return (
     <div>
       {toast && <div className="toast">{toast}</div>}
+
+      {/* Getting started guide — show only when nothing selected */}
+      {!payer && codes.length === 0 && mode === 'fee' && (
+        <div className="card" style={{ borderColor: '#FF8200', borderWidth: 2, marginBottom: 16, background: 'linear-gradient(135deg, #fff9f3 0%, #fff 100%)' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+            <div style={{ fontSize: 28, flexShrink: 0, marginTop: 2 }}>$</div>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: 16, color: '#1a1a1a', marginBottom: 6 }}>
+                Maximize Your Reimbursement
+              </div>
+              <div style={{ fontSize: 14, color: '#6b7280', lineHeight: 1.6 }}>
+                <strong>1.</strong> Select your <strong>provider</strong> to see discipline-specific codes<br />
+                <strong>2.</strong> Choose the <strong>payer/insurance</strong> to see their rates<br />
+                <strong>3.</strong> Add <strong>billing codes</strong> and the calculator shows your expected reimbursement<br />
+                <strong>4.</strong> Check the <strong>green optimization tips</strong> for ways to bill more
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Mode toggle */}
       <div className="mode-toggle">
@@ -374,12 +400,42 @@ export default function CalcView({ user, templateCodes, selectedPatient, onClear
             />
           )}
 
+          {/* Optimization Suggestions — help staff maximize reimbursement */}
+          {suggestions.length > 0 && (
+            <div style={{ marginBottom: 14 }}>
+              {suggestions.map((s) => (
+                <div key={s.code} className="optimization-tip">
+                  <span className="optimization-tip-icon">$</span>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 4 }}>
+                      +${s.difference.toFixed(2)} more with {s.suggestion}
+                    </div>
+                    <div>{s.hint}</div>
+                    <button
+                      className="btn btn-sm"
+                      onClick={() => {
+                        setCodes(p => [...p.filter(c => c !== s.code), s.suggestion]);
+                      }}
+                      style={{
+                        marginTop: 8, padding: '5px 12px', fontSize: 12,
+                        background: '#16a34a', color: '#fff', border: 'none',
+                        borderRadius: 6, cursor: 'pointer', fontWeight: 700,
+                      }}
+                    >
+                      Switch {s.code} to {s.suggestion}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
           {/* Result card */}
-          <div className="card-surface">
+          <div className={codes.length > 0 && payer && total > 0 ? 'revenue-card' : 'card-surface'}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
               <div>
                 <div className="total-label">Expected Reimbursement</div>
-                <div className="total-amount" style={{ color: total > 0 ? '#FF8200' : '#9ca3af' }}>
+                <div className="total-amount" style={{ color: codes.length > 0 && payer && total > 0 ? undefined : '#9ca3af' }}>
                   ${total.toFixed(2)}
                 </div>
                 {!payer && codes.length === 0 && (
@@ -389,20 +445,23 @@ export default function CalcView({ user, templateCodes, selectedPatient, onClear
                   <div style={{ fontSize: 14, color: '#9ca3af', marginTop: 6 }}>Select a payer to see rates.</div>
                 )}
               </div>
-              {(payer || codes.length > 0) && (
-                <div style={{ textAlign: 'right', fontSize: 13, color: '#6b7280', lineHeight: 1.8, flexShrink: 0, marginLeft: 12 }}>
-                  {payer && <div style={{ fontWeight: 700 }}>{payer}</div>}
-                  {codes.length > 0 && <div>{codes.length} code{codes.length !== 1 ? 's' : ''}</div>}
-                  {codes.length > 0 && (
-                    <button
-                      onClick={() => setCodes([])}
-                      style={{ fontSize: 12, color: '#9ca3af', background: 'none', border: 'none', cursor: 'pointer', padding: 0, textDecoration: 'underline' }}
-                    >
-                      Clear all
-                    </button>
-                  )}
-                </div>
-              )}
+              {(payer || codes.length > 0) && (() => {
+                const isRevCard = codes.length > 0 && payer && total > 0;
+                return (
+                  <div style={{ textAlign: 'right', fontSize: 13, color: isRevCard ? 'rgba(255,255,255,0.7)' : '#6b7280', lineHeight: 1.8, flexShrink: 0, marginLeft: 12 }}>
+                    {payer && <div style={{ fontWeight: 700, color: isRevCard ? '#fff' : undefined }}>{payer}</div>}
+                    {codes.length > 0 && <div>{codes.length} code{codes.length !== 1 ? 's' : ''}</div>}
+                    {codes.length > 0 && (
+                      <button
+                        onClick={() => setCodes([])}
+                        style={{ fontSize: 12, color: isRevCard ? 'rgba(255,255,255,0.6)' : '#9ca3af', background: 'none', border: 'none', cursor: 'pointer', padding: 0, textDecoration: 'underline' }}
+                      >
+                        Clear all
+                      </button>
+                    )}
+                  </div>
+                );
+              })()}
             </div>
 
             {/* Not covered warning */}
@@ -413,27 +472,30 @@ export default function CalcView({ user, templateCodes, selectedPatient, onClear
             )}
 
             {/* Breakdown */}
-            {codes.length > 0 && payer && (
-              <div style={{ borderTop: '1.5px solid #e5e7eb', marginTop: 12, paddingTop: 12 }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 8 }}>
-                  Line-item breakdown
+            {codes.length > 0 && payer && (() => {
+              const isRevCard = total > 0;
+              return (
+                <div style={{ borderTop: `1.5px solid ${isRevCard ? 'rgba(255,255,255,0.2)' : '#e5e7eb'}`, marginTop: 12, paddingTop: 12 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: isRevCard ? 'rgba(255,255,255,0.6)' : '#6b7280', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 8 }}>
+                    Line-item breakdown
+                  </div>
+                  {codes.map(c => {
+                    const amt = (RATES[c] || {})[payer] || 0;
+                    return (
+                      <div key={c} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', padding: '7px 0', borderBottom: `1px solid ${isRevCard ? 'rgba(255,255,255,0.1)' : '#f3f4f6'}`, gap: 8 }}>
+                        <div style={{ minWidth: 0 }}>
+                          <span style={{ fontWeight: 700, fontSize: 13, color: isRevCard ? '#fff' : '#1a1a1a' }}>{c}</span>
+                          <span style={{ fontSize: 13, color: isRevCard ? 'rgba(255,255,255,0.6)' : '#6b7280', display: 'block', lineHeight: 1.3 }}>{CODE_LABELS[c]}</span>
+                        </div>
+                        <div style={{ fontWeight: 700, fontSize: 14, flexShrink: 0, color: isRevCard ? (amt > 0 ? '#fff' : '#fca5a5') : (amt > 0 ? '#1a1a1a' : '#b71c1c') }}>
+                          {amt > 0 ? `$${amt.toFixed(2)}` : 'Not covered'}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
-                {codes.map(c => {
-                  const amt = (RATES[c] || {})[payer] || 0;
-                  return (
-                    <div key={c} className="breakdown-row">
-                      <div className="breakdown-label">
-                        <span className="breakdown-code">{c}</span>
-                        <span className="breakdown-desc">{CODE_LABELS[c]}</span>
-                      </div>
-                      <div className="breakdown-amt" style={{ color: amt > 0 ? '#1a1a1a' : '#b71c1c' }}>
-                        {amt > 0 ? `$${amt.toFixed(2)}` : 'Not covered'}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+              );
+            })()}
 
             {/* Code chips */}
             {codes.length > 0 && (
