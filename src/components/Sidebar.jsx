@@ -6,7 +6,6 @@ const NAV_GROUPS = [
     icon: '🏠',
     tabs: [
       { k: 'home', label: 'Home' },
-      { k: 'guide', label: 'Quick Start Guide' },
     ],
   },
   {
@@ -152,6 +151,13 @@ export default function Sidebar({ activeTab, onTabChange, isAdmin, onSearchClick
 
       {/* Footer — pinned to bottom */}
       <div className="sidebar-footer">
+        <button
+          className={`sidebar-footer-btn${activeTab === 'guide' ? ' active' : ''}`}
+          onClick={() => onTabChange('guide')}
+        >
+          <span>?</span>
+          <span>Quick Start Guide</span>
+        </button>
         <button
           className={`sidebar-footer-btn${activeTab === 'feedback' ? ' active' : ''}`}
           onClick={() => onTabChange('feedback')}
