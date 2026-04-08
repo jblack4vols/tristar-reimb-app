@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { supabase } from '../../utils/supabase';
 import { useAdminData } from '../../utils/useAdminData';
 
@@ -135,18 +135,90 @@ export default function PayerNegotiation() {
 
   const totalPotentialGain = opportunities.reduce((s, o) => s + o.potentialGain, 0);
 
+  const exportPDF = useCallback(async () => {
+    const { default: jsPDF } = await import('jspdf');
+    await import('jspdf-autotable');
+    const doc = new jsPDF('landscape');
+
+    // Title
+    doc.setFontSize(18);
+    doc.setTextColor(255, 130, 0);
+    doc.text('Tristar Physical Therapy', 14, 18);
+    doc.setFontSize(14);
+    doc.setTextColor(26, 26, 26);
+    doc.text('Payer Rate Negotiation Report', 14, 28);
+    doc.setFontSize(10);
+    doc.setTextColor(107, 114, 128);
+    doc.text(`Generated: ${new Date().toLocaleDateString()} | Period: ${period === 'all' ? 'All Time' : period + ' days'}`, 14, 35);
+    doc.text(`Estimated Annual Opportunity: ${fmt$(totalPotentialGain)}`, 14, 42);
+
+    // Negotiation targets table
+    if (opportunities.length > 0) {
+      doc.setFontSize(12);
+      doc.setTextColor(26, 26, 26);
+      doc.text('Top Negotiation Targets', 14, 52);
+
+      doc.autoTable({
+        startY: 56,
+        head: [['Payer', 'Code', 'Description', 'Their Rate', 'Market Avg', 'Best Rate', 'Gap', 'Est. Annual Gain']],
+        body: opportunities.map(o => [
+          o.payer, o.code, o.codeLabel,
+          fmt$(o.currentRate), fmt$(o.avgRate), fmt$(o.maxRate),
+          `-${fmt$(o.gap)}`, o.potentialGain > 0 ? fmt$(o.potentialGain) : '--',
+        ]),
+        styles: { fontSize: 9 },
+        headStyles: { fillColor: [255, 130, 0] },
+      });
+    }
+
+    // Cross-payer rate comparison
+    const y = doc.lastAutoTable ? doc.lastAutoTable.finalY + 12 : 60;
+    doc.setFontSize(12);
+    doc.setTextColor(26, 26, 26);
+    doc.text('Cross-Payer Rate Comparison (Top 15 Codes)', 14, y);
+
+    doc.autoTable({
+      startY: y + 4,
+      head: [['Code', 'Description', 'Times Billed', 'Min Rate', 'Avg Rate', 'Max Rate', 'Spread']],
+      body: rateComparison.map(rc => [
+        rc.code, rc.label, rc.billedCount,
+        fmt$(rc.min), fmt$(rc.avg), fmt$(rc.max), fmt$(rc.spread),
+      ]),
+      styles: { fontSize: 9 },
+      headStyles: { fillColor: [255, 130, 0] },
+    });
+
+    // Payer volume summary
+    const y2 = doc.lastAutoTable.finalY + 12;
+    if (y2 < 170) {
+      doc.text('Payer Volume & Revenue', 14, y2);
+      doc.autoTable({
+        startY: y2 + 4,
+        head: [['Payer', 'Visits', 'Revenue', 'Avg/Visit']],
+        body: payerStats.map(p => [p.payer, p.visits, fmt$(p.revenue), fmt$(p.avgPerVisit)]),
+        styles: { fontSize: 9 },
+        headStyles: { fillColor: [255, 130, 0] },
+      });
+    }
+
+    doc.save(`tristar-negotiation-report-${new Date().toISOString().split('T')[0]}.pdf`);
+  }, [opportunities, rateComparison, payerStats, totalPotentialGain, period]);
+
   if (adminLoading) return <div style={{ textAlign: 'center', padding: '2rem', color: '#9ca3af' }}>Loading...</div>;
 
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
         <div className="section-head" style={{ marginBottom: 0 }}>Payer Rate Negotiation Report</div>
-        <div style={{ display: 'flex', gap: 6 }}>
+        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
           {['90', '180', '365', 'all'].map(p => (
             <button key={p} className={`group-pill${period === p ? ' active' : ''}`} onClick={() => setPeriod(p)}>
               {p === 'all' ? 'All Time' : `${p}d`}
             </button>
           ))}
+          <button className="btn btn-primary btn-sm" onClick={exportPDF} disabled={loadingEntries || entries.length === 0}>
+            Export PDF
+          </button>
         </div>
       </div>
 

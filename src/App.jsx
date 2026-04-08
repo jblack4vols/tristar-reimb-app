@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import bcrypt from 'bcryptjs';
 import { initMsal, msalLogout } from './authConfig';
 import { store, loadStore } from './utils/store';
-import { loadAllData } from './utils/adminDataStore';
+import { loadAllData, startRealtimeSync } from './utils/adminDataStore';
 import { initErrorTracking } from './utils/errorTracker';
 import { validatePassword } from './utils/validation';
 import LoginScreen from './components/LoginScreen';
@@ -115,6 +115,7 @@ export default function App() {
       timeout,
     ]).then(async (result) => {
       setReady(true);
+      startRealtimeSync();
       if (result === 'timeout') {
         console.warn('App init timed out — loading with cached/default data');
         const sess = store.getSession();

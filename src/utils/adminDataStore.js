@@ -86,6 +86,45 @@ export async function loadAllData() {
 
 export function isLoaded() { return loaded; }
 
+// ── Realtime subscriptions ────────────────────────────
+let realtimeChannel = null;
+
+export function startRealtimeSync() {
+  if (realtimeChannel) return; // already subscribed
+  realtimeChannel = supabase
+    .channel('rate-changes')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'rates' }, (payload) => {
+      if (!cache.rates) return;
+      const { new: row, eventType } = payload;
+      if (eventType === 'DELETE') {
+        // Remove from cache
+        if (row.code && row.payer && cache.rates[row.code]) {
+          delete cache.rates[row.code][row.payer];
+        }
+      } else if (row.code && row.payer) {
+        // INSERT or UPDATE
+        if (!cache.rates[row.code]) cache.rates[row.code] = {};
+        cache.rates[row.code][row.payer] = Number(row.amount);
+      }
+      notify();
+    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'payers' }, () => {
+      // Reload payers on any change
+      supabase.from('payers').select('*').order('sort_order').then(({ data }) => {
+        cache.payers = (data || []).map(p => p.name);
+        notify();
+      });
+    })
+    .subscribe();
+}
+
+export function stopRealtimeSync() {
+  if (realtimeChannel) {
+    supabase.removeChannel(realtimeChannel);
+    realtimeChannel = null;
+  }
+}
+
 // ── Getters (read from cache) ──────────────────────────
 
 export function getRates() { return cache.rates || {}; }
