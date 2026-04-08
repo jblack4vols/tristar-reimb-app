@@ -93,15 +93,16 @@ export default function UserManager({ user }) {
         id: `u_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
         name: prov.name,
         username: email,
-        password: 'Tristar2026',
+        password: import.meta.env.VITE_DEFAULT_USER_PASSWORD || 'ChangeMe123!',
         email,
         location: prov.location || '',
         role: 'staff',
         active: true,
+        mustResetPassword: true,
       });
     }
     if (newUsers.length === 0) { alert('All providers already have accounts.'); return; }
-    if (!confirm(`Create ${newUsers.length} new user account(s) from providers?\n\nUsername: email (e.g., julia.bentley@tristarpt.com)\nPassword: Tristar2026`)) return;
+    if (!confirm(`Create ${newUsers.length} new user account(s) from providers?\n\nUsername: email (e.g., julia.bentley@tristarpt.com)\nUsers will be required to set a new password on first login.`)) return;
     setBulkLoading(true);
     try {
       const updated = [...users, ...newUsers];

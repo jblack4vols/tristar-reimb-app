@@ -28,12 +28,10 @@ const TIMED_LABELS = {
  * Check whether a code is a timed code.
  * Timed codes include the base (TX) and multi-unit variants (2TX, 3TX, 4TX).
  */
-function isTimedCode(code) {
+function _isTimedCode(code) {
   return TIMED_BASES.some(base => {
     if (code === base) return true;
-    // Match multi-unit variants like 2TX, 3TX, 4TX, AQ2, AQ3, etc.
     const stripped = code.replace(/^\d+/, '');
-    const suffix = code.replace(/[A-Z]+\d*$/, '');
     return stripped === base || (base === 'AQ' && code.startsWith('AQ') && /^AQ\d+$/.test(code));
   });
 }
@@ -73,9 +71,8 @@ function getBillableUnits(totalMinutes) {
 export default function EightMinuteRule({ codes }) {
   const [totalMinutes, setTotalMinutes] = useState('');
 
-  if (!codes || codes.length === 0) return null;
-
   const { timedCodes, untimedCodes } = useMemo(() => {
+    if (!codes || codes.length === 0) return { timedCodes: [], untimedCodes: [] };
     const timed = [];
     const untimed = [];
     (codes || []).forEach(c => {
@@ -108,7 +105,6 @@ export default function EightMinuteRule({ codes }) {
     const bases = Object.values(baseMap);
 
     // Distribute billable units proportionally based on selected units
-    let remaining = billableUnits;
     const result = bases.map(b => {
       const proportion = totalSelectedUnits > 0
         ? Math.round((b.selectedUnits / totalSelectedUnits) * billableUnits)
@@ -132,6 +128,8 @@ export default function EightMinuteRule({ codes }) {
   }, [timedCodes, billableUnits, totalSelectedUnits]);
 
   const activeRange = RULE_RANGES.find(r => minutes >= r.min && minutes <= r.max);
+
+  if (!codes || codes.length === 0) return null;
 
   return (
     <div className="card-surface" style={{ marginTop: 14 }}>

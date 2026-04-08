@@ -1,11 +1,15 @@
 import { PublicClientApplication, LogLevel } from '@azure/msal-browser';
 
+const AZURE_CLIENT_ID = import.meta.env.VITE_AZURE_CLIENT_ID;
+const AZURE_TENANT_ID = import.meta.env.VITE_AZURE_TENANT_ID;
+const REDIRECT_URI = import.meta.env.VITE_REDIRECT_URI || window.location.origin + '/';
+
 export const MSAL_CONFIG = {
   auth: {
-    clientId: 'debda2f0-a35b-44c9-8e0b-9d1d306c49a8',
-    authority: 'https://login.microsoftonline.com/668d2c67-481c-4c6c-8904-b08dfd68308c',
-    redirectUri: 'https://rcalc.tristarpt.com/',
-    postLogoutRedirectUri: 'https://rcalc.tristarpt.com/',
+    clientId: AZURE_CLIENT_ID,
+    authority: `https://login.microsoftonline.com/${AZURE_TENANT_ID}`,
+    redirectUri: REDIRECT_URI,
+    postLogoutRedirectUri: REDIRECT_URI,
     navigateToLoginRequestUrl: false,
   },
   cache: {

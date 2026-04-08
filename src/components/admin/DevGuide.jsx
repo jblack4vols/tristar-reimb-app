@@ -195,21 +195,20 @@ git push`}
       {/* Environment & Credentials */}
       <div className="card" style={{ marginBottom: 16 }}>
         <div style={{ fontSize: 18, fontWeight: 700, color: '#FF8200', marginBottom: 10 }}>
-          Credentials & Config
+          Environment Configuration
         </div>
         <div style={{ fontSize: 14, color: '#374151', lineHeight: 1.8 }}>
+          <p style={{ marginBottom: 12 }}>
+            All secrets are stored in environment variables — see <code>.env.example</code> for the template.
+            Never commit the <code>.env</code> file. For CI/CD, secrets are configured in GitHub repository settings.
+          </p>
           <table style={{ width: '100%', fontSize: 13, borderCollapse: 'collapse' }}>
             <tbody>
               {[
-                ['Supabase Project', 'qkdwondlzlsftungslnm'],
-                ['Supabase URL', 'https://qkdwondlzlsftungslnm.supabase.co'],
-                ['Azure AD Client ID', 'debda2f0-a35b-44c9-8e0b-9d1d306c49a8'],
-                ['Azure AD Tenant ID', '668d2c67-481c-4c6c-8904-b08dfd68308c'],
                 ['GitHub Repo', 'jblack4vols/tristar-reimb-app'],
                 ['Live URL', 'https://rcalc.tristarpt.com'],
-                ['Super Admin Login', 'jordan / Tristar2025!'],
-                ['Default Staff Password', 'Tristar2026'],
-                ['PHI Encryption Key', 'In src/utils/crypto.js'],
+                ['Secrets Location', '.env file (local) / GitHub Secrets (CI)'],
+                ['Super Admin Username', 'jordan'],
               ].map(([label, value]) => (
                 <tr key={label} style={{ borderBottom: '1px solid #f3f4f6' }}>
                   <td style={{ padding: '8px', fontWeight: 600, whiteSpace: 'nowrap' }}>{label}</td>
@@ -288,8 +287,8 @@ git push`}
       <div className="alert-warning" style={{ marginBottom: 16, padding: 16 }}>
         <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 6 }}>HIPAA Reminders</div>
         <ul style={{ paddingLeft: 20, margin: 0, fontSize: 13, lineHeight: 1.7 }}>
-          <li>Patient names are encrypted with AES before storing in Supabase</li>
-          <li>The encryption key is in <code>src/utils/crypto.js</code> — keep this file secure</li>
+          <li>Patient names are encrypted with AES-CBC (random IV per record) before storing in Supabase</li>
+          <li>The encryption key is stored in environment variables — never commit it to source code</li>
           <li>Never log patient names to the activity log or browser console</li>
           <li>Supabase Pro plan + BAA is required before storing real patient data</li>
           <li>Sessions auto-expire after 15 minutes of inactivity</li>

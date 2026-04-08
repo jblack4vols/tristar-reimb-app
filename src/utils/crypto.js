@@ -1,22 +1,44 @@
 import CryptoJS from 'crypto-js';
 
-// Encryption key — in production, this should come from an environment variable.
-// For now, it's a static key that ensures PHI is encrypted at rest in Supabase.
-// Even if the database is breached, patient names are unreadable without this key.
-const ENC_KEY = 'trc-hipaa-enc-2026-TristarPT-x9k2m';
+const ENC_KEY = import.meta.env.VITE_PHI_ENCRYPTION_KEY;
+
+if (!ENC_KEY) {
+  throw new Error('Missing VITE_PHI_ENCRYPTION_KEY environment variable. PHI encryption requires this key.');
+}
 
 export function encryptPHI(plaintext) {
   if (!plaintext) return '';
-  return CryptoJS.AES.encrypt(plaintext, ENC_KEY).toString();
+  const iv = CryptoJS.lib.WordArray.random(16);
+  const encrypted = CryptoJS.AES.encrypt(plaintext, CryptoJS.enc.Utf8.parse(ENC_KEY.padEnd(32).slice(0, 32)), {
+    iv,
+    mode: CryptoJS.mode.CBC,
+    padding: CryptoJS.pad.Pkcs7,
+  });
+  // Prefix IV to ciphertext so we can decrypt later
+  return iv.toString(CryptoJS.enc.Base64) + ':' + encrypted.toString();
 }
 
 export function decryptPHI(ciphertext) {
   if (!ciphertext) return '';
   try {
+    // New format: IV:ciphertext
+    if (ciphertext.includes(':')) {
+      const [ivBase64, ct] = ciphertext.split(':');
+      const iv = CryptoJS.enc.Base64.parse(ivBase64);
+      const decrypted = CryptoJS.AES.decrypt(ct, CryptoJS.enc.Utf8.parse(ENC_KEY.padEnd(32).slice(0, 32)), {
+        iv,
+        mode: CryptoJS.mode.CBC,
+        padding: CryptoJS.pad.Pkcs7,
+      });
+      const result = decrypted.toString(CryptoJS.enc.Utf8);
+      if (result) return result;
+    }
+    // Legacy format: passphrase-based (for existing data)
     const bytes = CryptoJS.AES.decrypt(ciphertext, ENC_KEY);
     const result = bytes.toString(CryptoJS.enc.Utf8);
-    // If decryption fails (e.g., unencrypted legacy data), return original
-    return result || ciphertext;
+    if (result) return result;
+    // Unencrypted legacy data
+    return ciphertext;
   } catch {
     return ciphertext;
   }

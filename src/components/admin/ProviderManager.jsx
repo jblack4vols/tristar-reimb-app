@@ -257,7 +257,7 @@ export default function ProviderManager() {
               <button
                 className="btn btn-ghost btn-sm"
                 style={{ marginTop: 10 }}
-                onClick={() => { setAddingAt(loc); setNewName(''); setNewIsOT(false); }}
+                onClick={() => { setAddingAt(loc); setNewName(''); setNewDiscipline('PT'); }}
               >
                 + Add Provider
               </button>

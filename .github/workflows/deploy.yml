@@ -28,9 +28,22 @@ jobs:
         with:
           node-version: 20
       - name: Install dependencies
-        run: npm install
+        run: npm ci
+      - name: Lint
+        run: npm run lint
+      - name: Test
+        run: npm test
       - name: Build
         run: npm run build
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          VITE_AZURE_CLIENT_ID: ${{ secrets.VITE_AZURE_CLIENT_ID }}
+          VITE_AZURE_TENANT_ID: ${{ secrets.VITE_AZURE_TENANT_ID }}
+          VITE_REDIRECT_URI: ${{ secrets.VITE_REDIRECT_URI }}
+          VITE_PHI_ENCRYPTION_KEY: ${{ secrets.VITE_PHI_ENCRYPTION_KEY }}
+          VITE_SUPER_ADMIN_PASSWORD: ${{ secrets.VITE_SUPER_ADMIN_PASSWORD }}
+          VITE_DEFAULT_USER_PASSWORD: ${{ secrets.VITE_DEFAULT_USER_PASSWORD }}
       - name: Setup Pages
         uses: actions/configure-pages@v4
       - name: Upload artifact

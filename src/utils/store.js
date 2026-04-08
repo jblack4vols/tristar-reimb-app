@@ -24,6 +24,7 @@ export async function loadStore() {
     usersCache = (usersRes.data || []).map(u => ({
       id: u.id, name: u.name, username: u.username, password: u.password,
       email: u.email || '', location: u.location || '', role: u.role, active: u.active,
+      mustResetPassword: u.must_reset_password || false,
     }));
     combosCache = (combosRes.data || []).map(c => ({
       id: c.id, name: c.name, codes: c.codes || [], payer: c.payer || '',
@@ -35,7 +36,7 @@ export async function loadStore() {
     }));
     storeLoaded = true;
     notifyStore();
-    try { localStorage.setItem('trc_offline_store', JSON.stringify({ usersCache, combosCache, logCache })); } catch {}
+    try { localStorage.setItem('trc_offline_store', JSON.stringify({ usersCache, combosCache, logCache })); } catch { /* localStorage may be full or unavailable */ }
   } catch (err) {
     console.warn('Supabase loadStore failed, attempting offline fallback:', err);
     const offline = localStorage.getItem('trc_offline_store');
@@ -67,6 +68,7 @@ export const store = {
       return {
         id: u.id, name: u.name, username: u.username, password: hashedPw,
         email: u.email || '', location: u.location || '', role: u.role, active: u.active !== false,
+        must_reset_password: u.mustResetPassword || false,
       };
     });
     // Delete users not in the new list
@@ -135,6 +137,6 @@ export const store = {
 
   // ── Session (stays in sessionStorage — browser-local) ──
   getSession:   () => { try { return JSON.parse(sessionStorage.getItem(SK_SESSION) || 'null'); } catch { return null; } },
-  setSession:   u  => { try { sessionStorage.setItem(SK_SESSION, JSON.stringify(u)); } catch {} },
-  clearSession: () => { try { sessionStorage.removeItem(SK_SESSION); } catch {} },
+  setSession:   u  => { try { sessionStorage.setItem(SK_SESSION, JSON.stringify(u)); } catch { /* storage unavailable */ } },
+  clearSession: () => { try { sessionStorage.removeItem(SK_SESSION); } catch { /* storage unavailable */ } },
 };

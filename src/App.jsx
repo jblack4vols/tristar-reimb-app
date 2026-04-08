@@ -7,7 +7,7 @@ import LoginScreen from './components/LoginScreen';
 import AdminShell from './components/AdminShell';
 import UserShell from './components/UserShell';
 
-const SUPER_ADMIN_PW_HASH = bcrypt.hashSync('Tristar2025!', 10);
+const SUPER_ADMIN_PW_HASH = bcrypt.hashSync(import.meta.env.VITE_SUPER_ADMIN_PASSWORD || '', 12);
 
 const SUPER_ADMIN = {
   id: 'sa_jordan',
@@ -46,6 +46,7 @@ export default function App() {
   const [loginForm, setLoginForm]     = useState({ username: '', password: '' });
   const [ready, setReady]             = useState(false);
   const [isOffline, setIsOffline]     = useState(!navigator.onLine);
+  const [resetPassword, setResetPassword] = useState({ show: false, newPw: '', confirmPw: '', user: null });
 
   // Offline detection
   useEffect(() => {
@@ -149,6 +150,11 @@ export default function App() {
         bcrypt.compareSync(password, u.password)
     );
     if (u) {
+      if (u.mustResetPassword) {
+        setResetPassword({ show: true, newPw: '', confirmPw: '', user: u });
+        setLoginErr('');
+        return;
+      }
       store.setSession(u);
       await store.pushLog({ user: u.username, action: 'login', detail: u.location || '' });
       setCurrentUser(u);
@@ -167,6 +173,24 @@ export default function App() {
     if (currentUser?.msAccount) {
       try { await msalLogout(); } catch (e) { console.error(e); }
     }
+  };
+
+  const handlePasswordReset = async () => {
+    const { newPw, confirmPw, user: resetUser } = resetPassword;
+    if (!newPw || newPw.length < 8) { alert('Password must be at least 8 characters.'); return; }
+    if (newPw !== confirmPw) { alert('Passwords do not match.'); return; }
+    const users = store.getUsers();
+    const updated = users.map(u =>
+      u.id === resetUser.id
+        ? { ...u, password: bcrypt.hashSync(newPw, 12), mustResetPassword: false }
+        : u
+    );
+    await store.setUsers(updated);
+    const freshUser = { ...resetUser, password: bcrypt.hashSync(newPw, 12), mustResetPassword: false };
+    store.setSession(freshUser);
+    await store.pushLog({ user: freshUser.username, action: 'password_reset', detail: 'First login password change' });
+    setCurrentUser(freshUser);
+    setResetPassword({ show: false, newPw: '', confirmPw: '', user: null });
   };
 
   const offlineBanner = isOffline ? (
@@ -195,6 +219,38 @@ export default function App() {
           <div style={{ width: 40, height: 40, border: '3px solid #eee', borderTopColor: '#FF8200', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
           <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
           <div style={{ color: '#9ca3af', fontSize: 14 }}>Loading…</div>
+        </div>
+      </>
+    );
+  }
+
+  if (resetPassword.show) {
+    return (
+      <>
+        {offlineBanner}
+        <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f5f5f5' }}>
+          <div className="card" style={{ maxWidth: 400, width: '100%', margin: 16, borderColor: '#FF8200', borderWidth: 2 }}>
+            <div style={{ fontSize: 20, fontWeight: 700, color: '#FF8200', marginBottom: 8 }}>Set New Password</div>
+            <div style={{ fontSize: 14, color: '#6b7280', marginBottom: 16 }}>
+              Welcome, {resetPassword.user?.name}! You must set a new password before continuing.
+            </div>
+            <div style={{ marginBottom: 12 }}>
+              <label style={{ fontSize: 13, fontWeight: 600, display: 'block', marginBottom: 4 }}>New Password (min 8 characters)</label>
+              <input type="password" value={resetPassword.newPw}
+                onChange={e => setResetPassword(r => ({ ...r, newPw: e.target.value }))}
+                style={{ width: '100%' }} autoFocus />
+            </div>
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ fontSize: 13, fontWeight: 600, display: 'block', marginBottom: 4 }}>Confirm Password</label>
+              <input type="password" value={resetPassword.confirmPw}
+                onChange={e => setResetPassword(r => ({ ...r, confirmPw: e.target.value }))}
+                onKeyDown={e => e.key === 'Enter' && handlePasswordReset()}
+                style={{ width: '100%' }} />
+            </div>
+            <button className="btn btn-primary" onClick={handlePasswordReset} style={{ width: '100%' }}>
+              Set Password & Sign In
+            </button>
+          </div>
         </div>
       </>
     );
