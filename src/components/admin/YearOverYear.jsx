@@ -9,10 +9,10 @@ const MONTHS = [
 ];
 
 const fmt = n => `$${Number(n || 0).toFixed(2)}`;
-const fmtK = n => n >= 1000 ? `$${(n / 1000).toFixed(1)}k` : fmt(n);
+const _fmtK = n => n >= 1000 ? `$${(n / 1000).toFixed(1)}k` : fmt(n);
 
 export default function YearOverYear() {
-  const { allProviders, loading } = useAdminData();
+  const { _allProviders, loading } = useAdminData();
   const currentYear = new Date().getFullYear();
   const [thisYearVisits, setThisYearVisits] = useState([]);
   const [lastYearVisits, setLastYearVisits] = useState([]);

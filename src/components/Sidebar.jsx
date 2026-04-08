@@ -167,7 +167,7 @@ export default function Sidebar({ activeTab, onTabChange, isAdmin, onSearchClick
 }
 
 // Mobile bottom bar — shows on small screens
-export function MobileBottomBar({ activeTab, onTabChange, isAdmin, onSearchClick }) {
+export function MobileBottomBar({ activeTab, onTabChange, _isAdmin, onSearchClick }) {
   const MOBILE_TABS = [
     { k: 'home',    icon: '🏠', label: 'Home' },
     { k: 'newvisit', icon: '📝', label: 'Visit' },

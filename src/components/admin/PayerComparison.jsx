@@ -1,6 +1,5 @@
 import { useState, useMemo } from 'react';
 import { useAdminData } from '../../utils/useAdminData';
-import { supabase } from '../../utils/supabase';
 
 const BRAND = '#FF8200';
 
@@ -15,7 +14,7 @@ const VISIT_TEMPLATES = {
 const fmt = n => (n !== null && n !== undefined && !isNaN(n)) ? `$${Number(n).toFixed(2)}` : '\u2014';
 
 export default function PayerComparison() {
-  const { rates, payers, codeLabels, codeGroups, loading } = useAdminData();
+  const { rates, payers, codeLabels, _codeGroups, loading } = useAdminData();
   const [selectedPayers, setSelectedPayers] = useState([]);
   const [selectedCodes, setSelectedCodes] = useState([]);
   const [template, setTemplate] = useState('');

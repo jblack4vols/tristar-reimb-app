@@ -284,10 +284,12 @@ export default function CalcView({ user, templateCodes, selectedPatient, onClear
           />
 
           {/* Group pills */}
-          <div className="group-pills">
+          <div className="group-pills" role="tablist" aria-label="Code groups">
             {[{ key: 'All', label: 'All Codes' }, ...groups].map(g => (
               <button
                 key={g.key}
+                role="tab"
+                aria-selected={grp === g.key}
                 className={`group-pill${grp === g.key ? ' active' : ''}`}
                 onClick={() => setGrp(g.key)}
               >
@@ -297,7 +299,7 @@ export default function CalcView({ user, templateCodes, selectedPatient, onClear
           </div>
 
           {/* Code grid */}
-          <div className="code-grid">
+          <div className="code-grid" role="group" aria-label="Billing codes">
             {visibleCodes.map(code => {
               const rate   = payer ? ((RATES[code] || {})[payer] ?? null) : null;
               const active = codes.includes(code);
@@ -307,6 +309,8 @@ export default function CalcView({ user, templateCodes, selectedPatient, onClear
                   key={code}
                   className={`code-btn${active ? ' active' : ''}${!covered ? ' not-covered' : ''}`}
                   onClick={() => toggle(code)}
+                  aria-pressed={active}
+                  aria-label={`${code} ${CODE_LABELS[code] || ''} ${rate !== null ? (rate > 0 ? `$${rate.toFixed(2)}` : 'Not covered') : ''}`}
                 >
                   <div className="code-btn-title">{code}</div>
                   <div className="code-btn-desc">{(CODE_LABELS[code] || '').substring(0, 26)}</div>

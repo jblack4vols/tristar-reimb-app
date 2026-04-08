@@ -1,37 +1,49 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import Header from './Header';
 import GroupedNav from './GroupedNav';
 import Sidebar, { MobileBottomBar } from './Sidebar';
-import FeatureRequests from './FeatureRequests';
 import GlobalSearch from './GlobalSearch';
 import OnboardingTour from './OnboardingTour';
 import HomePage from './HomePage';
-import NewVisitFlow from './NewVisitFlow';
-import BatchVisitEntry from './BatchVisitEntry';
-import CalcView from './CalcView';
-import UserManager from './UserManager';
-import AdminCombos from './AdminCombos';
-import ActivityLog from './ActivityLog';
-import RateManager from './admin/RateManager';
-import PayerManager from './admin/PayerManager';
-import ProviderManager from './admin/ProviderManager';
-import BillingRulesEditor from './admin/BillingRulesEditor';
-import DataExportImport from './admin/DataExportImport';
-import DataBackup from './admin/DataBackup';
-import RateHistory from './admin/RateHistory';
-import Dashboard from './admin/Dashboard';
-import ProductivityTracker from './admin/ProductivityTracker';
-import PayerComparison from './admin/PayerComparison';
-import MonthlyReport from './admin/MonthlyReport';
-import YearOverYear from './admin/YearOverYear';
-import VisitHistory from './VisitHistory';
-import PatientDirectory from './PatientDirectory';
-import AuthTracker from './AuthTracker';
-import TreatmentTemplates from './TreatmentTemplates';
-import QuickStartGuide from './QuickStartGuide';
-import DevGuide from './admin/DevGuide';
+import ViewErrorBoundary from './ViewErrorBoundary';
 import { supabase } from '../utils/supabase';
 import { decryptPHI } from '../utils/crypto';
+
+// Core views — used by most sessions
+const CalcView = lazy(() => import('./CalcView'));
+const NewVisitFlow = lazy(() => import('./NewVisitFlow'));
+const BatchVisitEntry = lazy(() => import('./BatchVisitEntry'));
+const PatientDirectory = lazy(() => import('./PatientDirectory'));
+const VisitHistory = lazy(() => import('./VisitHistory'));
+const TreatmentTemplates = lazy(() => import('./TreatmentTemplates'));
+const AuthTracker = lazy(() => import('./AuthTracker'));
+const FeatureRequests = lazy(() => import('./FeatureRequests'));
+const QuickStartGuide = lazy(() => import('./QuickStartGuide'));
+
+// Admin-only views — lazy loaded
+const UserManager = lazy(() => import('./UserManager'));
+const AdminCombos = lazy(() => import('./AdminCombos'));
+const ActivityLog = lazy(() => import('./ActivityLog'));
+const RateManager = lazy(() => import('./admin/RateManager'));
+const PayerManager = lazy(() => import('./admin/PayerManager'));
+const ProviderManager = lazy(() => import('./admin/ProviderManager'));
+const BillingRulesEditor = lazy(() => import('./admin/BillingRulesEditor'));
+const DataExportImport = lazy(() => import('./admin/DataExportImport'));
+const DataBackup = lazy(() => import('./admin/DataBackup'));
+const RateHistory = lazy(() => import('./admin/RateHistory'));
+const Dashboard = lazy(() => import('./admin/Dashboard'));
+const ProductivityTracker = lazy(() => import('./admin/ProductivityTracker'));
+const PayerComparison = lazy(() => import('./admin/PayerComparison'));
+const MonthlyReport = lazy(() => import('./admin/MonthlyReport'));
+const YearOverYear = lazy(() => import('./admin/YearOverYear'));
+const DevGuide = lazy(() => import('./admin/DevGuide'));
+
+const ViewLoader = () => (
+  <div style={{ textAlign: 'center', padding: '3rem', color: '#9ca3af' }}>
+    <div style={{ width: 32, height: 32, border: '3px solid #eee', borderTopColor: '#FF8200', borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
+    Loading...
+  </div>
+);
 
 export default function AdminShell({ user, onLogout }) {
   const [tab, setTab] = useState('home');
@@ -91,32 +103,36 @@ export default function AdminShell({ user, onLogout }) {
             <Header user={user} onLogout={onLogout} badge={badge} onSearchClick={() => setSearchOpen(true)} />
             <GroupedNav activeTab={tab} onTabChange={setTab} isAdmin={true} />
 
-            {tab === 'home'         && <HomePage user={user} onNavigate={setTab} recentPatients={recentPatients} />}
-            {tab === 'guide'        && <QuickStartGuide />}
-            {tab === 'dashboard'    && <Dashboard />}
-            {tab === 'calc'         && <CalcView user={user} templateCodes={templateCodes} selectedPatient={selectedPatient} onClearTemplate={() => setTemplateCodes(null)} onClearPatient={() => setSelectedPatient('')} />}
-            {tab === 'newvisit'     && <NewVisitFlow user={user} />}
-            {tab === 'batch'        && <BatchVisitEntry user={user} />}
-            {tab === 'patients'     && <PatientDirectory user={user} onSelectPatient={selectPatient} />}
-            {tab === 'auths'        && <AuthTracker user={user} />}
-            {tab === 'templates'    && <TreatmentTemplates user={user} onApplyTemplate={applyTemplate} />}
-            {tab === 'visits'       && <VisitHistory user={user} adminView={true} />}
-            {tab === 'productivity' && <ProductivityTracker />}
-            {tab === 'rates'        && <RateManager user={user} />}
-            {tab === 'ratehistory'  && <RateHistory />}
-            {tab === 'payers'       && <PayerManager user={user} />}
-            {tab === 'comparison'   && <PayerComparison />}
-            {tab === 'providers'    && <ProviderManager />}
-            {tab === 'rules'        && <BillingRulesEditor />}
-            {tab === 'report'       && <MonthlyReport />}
-            {tab === 'yoy'          && <YearOverYear />}
-            {tab === 'data'         && <DataExportImport user={user} />}
-            {tab === 'backup'       && <DataBackup />}
-            {tab === 'users'        && <UserManager user={user} />}
-            {tab === 'combos'       && <AdminCombos user={user} />}
-            {tab === 'log'          && <ActivityLog user={user} />}
-            {tab === 'feedback'     && <FeatureRequests user={user} isAdmin={true} />}
-            {tab === 'devguide'    && <DevGuide user={user} />}
+            {tab === 'home' && <HomePage user={user} onNavigate={setTab} recentPatients={recentPatients} />}
+            <ViewErrorBoundary name={tab} key={tab}>
+              <Suspense fallback={<ViewLoader />}>
+                {tab === 'guide'        && <QuickStartGuide />}
+                {tab === 'dashboard'    && <Dashboard />}
+                {tab === 'calc'         && <CalcView user={user} templateCodes={templateCodes} selectedPatient={selectedPatient} onClearTemplate={() => setTemplateCodes(null)} onClearPatient={() => setSelectedPatient('')} />}
+                {tab === 'newvisit'     && <NewVisitFlow user={user} />}
+                {tab === 'batch'        && <BatchVisitEntry user={user} />}
+                {tab === 'patients'     && <PatientDirectory user={user} onSelectPatient={selectPatient} />}
+                {tab === 'auths'        && <AuthTracker user={user} />}
+                {tab === 'templates'    && <TreatmentTemplates user={user} onApplyTemplate={applyTemplate} />}
+                {tab === 'visits'       && <VisitHistory user={user} adminView={true} />}
+                {tab === 'productivity' && <ProductivityTracker />}
+                {tab === 'rates'        && <RateManager user={user} />}
+                {tab === 'ratehistory'  && <RateHistory />}
+                {tab === 'payers'       && <PayerManager user={user} />}
+                {tab === 'comparison'   && <PayerComparison />}
+                {tab === 'providers'    && <ProviderManager />}
+                {tab === 'rules'        && <BillingRulesEditor />}
+                {tab === 'report'       && <MonthlyReport />}
+                {tab === 'yoy'          && <YearOverYear />}
+                {tab === 'data'         && <DataExportImport user={user} />}
+                {tab === 'backup'       && <DataBackup />}
+                {tab === 'users'        && <UserManager user={user} />}
+                {tab === 'combos'       && <AdminCombos user={user} />}
+                {tab === 'log'          && <ActivityLog user={user} />}
+                {tab === 'feedback'     && <FeatureRequests user={user} isAdmin={true} />}
+                {tab === 'devguide'     && <DevGuide user={user} />}
+              </Suspense>
+            </ViewErrorBoundary>
           </div>
         </div>
         <MobileBottomBar activeTab={tab} onTabChange={setTab} isAdmin={true} onSearchClick={() => setSearchOpen(true)} />

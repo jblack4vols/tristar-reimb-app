@@ -120,6 +120,7 @@ export default function LoginScreen({ form, setForm, onLogin, err }) {
             className="ms-btn"
             onClick={handleMsLogin}
             disabled={msLoading}
+            aria-label="Sign in with Microsoft 365"
           >
             <MsIcon />
             {msLoading ? 'Redirecting to Microsoft…' : 'Sign in with Microsoft 365'}

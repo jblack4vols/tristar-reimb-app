@@ -20,7 +20,7 @@ function getDefaultMonth() {
 }
 
 export default function MonthlyReport() {
-  const { rates, payers, allProviders, codeLabels, loading } = useAdminData();
+  const { _rates, _payers, _allProviders, codeLabels, loading } = useAdminData();
   const [month, setMonth] = useState(getDefaultMonth().month);
   const [year, setYear] = useState(getDefaultMonth().year);
   const [visits, setVisits] = useState([]);

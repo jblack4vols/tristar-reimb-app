@@ -204,7 +204,7 @@ export default function PatientDirectory({ user, onSelectPatient }) {
     if (!auth) {
       return <span className="badge badge-muted" style={{ fontSize: 11 }}>No Auth</span>;
     }
-    const { remaining, authorized, used } = auth;
+    const { remaining, authorized, _used } = auth;
     let color, bg, label;
     if (remaining <= 0) {
       color = '#fff';

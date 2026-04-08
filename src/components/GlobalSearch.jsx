@@ -7,7 +7,7 @@ const MAX_PER_CATEGORY = 5;
 const DEBOUNCE_MS = 300;
 
 export default function GlobalSearch({ isOpen, onClose, onNavigate }) {
-  const { codeLabels, payers, loading: adminLoading } = useAdminData();
+  const { codeLabels, payers, loading: _adminLoading } = useAdminData();
   const inputRef = useRef(null);
   const timerRef = useRef(null);
 
@@ -73,7 +73,7 @@ export default function GlobalSearch({ isOpen, onClose, onNavigate }) {
     }
 
     // Search patients (from supabase, decrypt names)
-    let matchedPatients = [];
+    const matchedPatients = [];
     try {
       const { data } = await supabase
         .from('patients')
@@ -95,7 +95,7 @@ export default function GlobalSearch({ isOpen, onClose, onNavigate }) {
     }
 
     // Search templates (from supabase)
-    let matchedTemplates = [];
+    const matchedTemplates = [];
     try {
       const { data } = await supabase
         .from('treatment_templates')

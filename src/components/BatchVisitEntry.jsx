@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../utils/supabase';
 import { encryptPHI, decryptPHI } from '../utils/crypto';
 import { useAdminData } from '../utils/useAdminData';

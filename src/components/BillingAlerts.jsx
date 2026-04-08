@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { getBillingWarnings } from '../utils/billingOptimizer';
 
-export default function BillingAlerts({ codes, payer, rates, codeLabels }) {
+export default function BillingAlerts({ codes, payer, rates, _codeLabels }) {
   const warnings = useMemo(() => {
     try {
       return getBillingWarnings(codes || [], payer || '', rates || {});

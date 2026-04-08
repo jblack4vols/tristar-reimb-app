@@ -3,9 +3,14 @@ import bcrypt from 'bcryptjs';
 import { initMsal, msalLogout } from './authConfig';
 import { store, loadStore } from './utils/store';
 import { loadAllData } from './utils/adminDataStore';
+import { initErrorTracking } from './utils/errorTracker';
+import { validatePassword } from './utils/validation';
 import LoginScreen from './components/LoginScreen';
 import AdminShell from './components/AdminShell';
 import UserShell from './components/UserShell';
+
+// Start tracking uncaught errors to activity log
+initErrorTracking();
 
 const SUPER_ADMIN_PW_HASH = bcrypt.hashSync(import.meta.env.VITE_SUPER_ADMIN_PASSWORD || '', 12);
 
@@ -26,7 +31,8 @@ function resolveMsUser(account) {
   );
   if (matched) return { ...matched, msAccount: true };
   const prefix = email.split('@')[0];
-  if (prefix === 'jordan' || prefix === 'jblack' || prefix === 'jordanblack') {
+  // Check if this MS account matches the super admin username
+  if (prefix === SUPER_ADMIN.username) {
     return { ...SUPER_ADMIN, msAccount: true, name: account.name || SUPER_ADMIN.name };
   }
   return {
@@ -177,7 +183,8 @@ export default function App() {
 
   const handlePasswordReset = async () => {
     const { newPw, confirmPw, user: resetUser } = resetPassword;
-    if (!newPw || newPw.length < 8) { alert('Password must be at least 8 characters.'); return; }
+    const pwErr = validatePassword(newPw);
+    if (pwErr) { alert(pwErr); return; }
     if (newPw !== confirmPw) { alert('Passwords do not match.'); return; }
     const users = store.getUsers();
     const updated = users.map(u =>

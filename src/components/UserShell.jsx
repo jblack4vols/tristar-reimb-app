@@ -1,22 +1,31 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import Header from './Header';
 import GroupedNav from './GroupedNav';
 import Sidebar, { MobileBottomBar } from './Sidebar';
 import GlobalSearch from './GlobalSearch';
-import FeatureRequests from './FeatureRequests';
 import OnboardingTour from './OnboardingTour';
 import HomePage from './HomePage';
-import NewVisitFlow from './NewVisitFlow';
-import BatchVisitEntry from './BatchVisitEntry';
-import CalcView from './CalcView';
-import UserCombos from './UserCombos';
-import VisitHistory from './VisitHistory';
-import PatientDirectory from './PatientDirectory';
-import AuthTracker from './AuthTracker';
-import TreatmentTemplates from './TreatmentTemplates';
-import QuickStartGuide from './QuickStartGuide';
+import ViewErrorBoundary from './ViewErrorBoundary';
 import { supabase } from '../utils/supabase';
 import { decryptPHI } from '../utils/crypto';
+
+const CalcView = lazy(() => import('./CalcView'));
+const NewVisitFlow = lazy(() => import('./NewVisitFlow'));
+const BatchVisitEntry = lazy(() => import('./BatchVisitEntry'));
+const PatientDirectory = lazy(() => import('./PatientDirectory'));
+const VisitHistory = lazy(() => import('./VisitHistory'));
+const TreatmentTemplates = lazy(() => import('./TreatmentTemplates'));
+const AuthTracker = lazy(() => import('./AuthTracker'));
+const FeatureRequests = lazy(() => import('./FeatureRequests'));
+const UserCombos = lazy(() => import('./UserCombos'));
+const QuickStartGuide = lazy(() => import('./QuickStartGuide'));
+
+const ViewLoader = () => (
+  <div style={{ textAlign: 'center', padding: '3rem', color: '#9ca3af' }}>
+    <div style={{ width: 32, height: 32, border: '3px solid #eee', borderTopColor: '#FF8200', borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
+    Loading...
+  </div>
+);
 
 export default function UserShell({ user, onLogout }) {
   const [tab, setTab] = useState('home');
@@ -68,17 +77,21 @@ export default function UserShell({ user, onLogout }) {
             <Header user={user} onLogout={onLogout} badge={user.location || 'Staff'} onSearchClick={() => setSearchOpen(true)} />
             <GroupedNav activeTab={tab} onTabChange={setTab} isAdmin={false} />
 
-            {tab === 'home'      && <HomePage user={user} onNavigate={setTab} recentPatients={recentPatients} />}
-            {tab === 'guide'     && <QuickStartGuide />}
-            {tab === 'calc'      && <CalcView user={user} templateCodes={templateCodes} selectedPatient={selectedPatient} onClearTemplate={() => setTemplateCodes(null)} onClearPatient={() => setSelectedPatient('')} />}
-            {tab === 'newvisit'  && <NewVisitFlow user={user} />}
-            {tab === 'batch'     && <BatchVisitEntry user={user} />}
-            {tab === 'patients'  && <PatientDirectory user={user} onSelectPatient={selectPatient} />}
-            {tab === 'auths'     && <AuthTracker user={user} />}
-            {tab === 'templates' && <TreatmentTemplates user={user} onApplyTemplate={applyTemplate} />}
-            {tab === 'visits'    && <VisitHistory user={user} />}
-            {tab === 'combos'    && <UserCombos user={user} />}
-            {tab === 'feedback'  && <FeatureRequests user={user} />}
+            {tab === 'home' && <HomePage user={user} onNavigate={setTab} recentPatients={recentPatients} />}
+            <ViewErrorBoundary name={tab} key={tab}>
+              <Suspense fallback={<ViewLoader />}>
+                {tab === 'guide'     && <QuickStartGuide />}
+                {tab === 'calc'      && <CalcView user={user} templateCodes={templateCodes} selectedPatient={selectedPatient} onClearTemplate={() => setTemplateCodes(null)} onClearPatient={() => setSelectedPatient('')} />}
+                {tab === 'newvisit'  && <NewVisitFlow user={user} />}
+                {tab === 'batch'     && <BatchVisitEntry user={user} />}
+                {tab === 'patients'  && <PatientDirectory user={user} onSelectPatient={selectPatient} />}
+                {tab === 'auths'     && <AuthTracker user={user} />}
+                {tab === 'templates' && <TreatmentTemplates user={user} onApplyTemplate={applyTemplate} />}
+                {tab === 'visits'    && <VisitHistory user={user} />}
+                {tab === 'combos'    && <UserCombos user={user} />}
+                {tab === 'feedback'  && <FeatureRequests user={user} />}
+              </Suspense>
+            </ViewErrorBoundary>
           </div>
         </div>
         <MobileBottomBar activeTab={tab} onTabChange={setTab} isAdmin={false} onSearchClick={() => setSearchOpen(true)} />

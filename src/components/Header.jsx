@@ -35,14 +35,14 @@ export default function Header({ user, onLogout, badge, onSearchClick }) {
         <div className="header-badge">{badge}</div>
         <div className="header-name">{user.name}</div>
         {onSearchClick && (
-          <button className="header-signout" onClick={onSearchClick} style={{ marginRight: 4 }} title="Search (Ctrl+K)">
-            🔍
+          <button className="header-signout" onClick={onSearchClick} style={{ marginRight: 4 }} title="Search (Ctrl+K)" aria-label="Open search">
+            \uD83D\uDD0D
           </button>
         )}
-        <button className="header-signout" onClick={toggleTheme} style={{ marginRight: 4 }}>
-          {theme === 'dark' ? '☀️' : '🌙'}
+        <button className="header-signout" onClick={toggleTheme} style={{ marginRight: 4 }} aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}>
+          {theme === 'dark' ? '\u2600\uFE0F' : '\uD83C\uDF19'}
         </button>
-        <button className="header-signout" onClick={onLogout}>
+        <button className="header-signout" onClick={onLogout} aria-label="Sign out">
           Sign out
         </button>
       </div>

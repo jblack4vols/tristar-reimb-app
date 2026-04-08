@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../utils/supabase';
-import { encryptPHI, decryptPHI } from '../utils/crypto';
+import { decryptPHI } from '../utils/crypto';
 
 const TODAY = new Date().toISOString().slice(0, 10);
 

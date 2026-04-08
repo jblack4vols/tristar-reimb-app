@@ -5,7 +5,7 @@ import { decryptPHI } from '../../utils/crypto';
 import { useAdminData } from '../../utils/useAdminData';
 
 export default function Dashboard() {
-  const { rates, payers, allProviders, codeLabels, loading } = useAdminData();
+  const { _rates, _payers, allProviders, codeLabels, loading } = useAdminData();
   const [visits, setVisits] = useState([]);
   const [visitsLoading, setVisitsLoading] = useState(true);
   const [period, setPeriod] = useState('30'); // days

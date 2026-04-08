@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../utils/supabase';
 import { encryptPHI, decryptPHI } from '../utils/crypto';
+import { validatePatientName } from '../utils/validation';
 import { useAdminData } from '../utils/useAdminData';
 import { store } from '../utils/store';
 import BillingAlerts from './BillingAlerts';
@@ -151,7 +152,8 @@ export default function NewVisitFlow({ user }) {
   };
 
   const handleAddNewPatient = async () => {
-    if (!newPatient.name.trim()) return;
+    const nameErr = validatePatientName(newPatient.name);
+    if (nameErr) { alert(nameErr); return; }
     const payload = {
       encrypted_name: encryptPHI(newPatient.name.trim()),
       payer: newPatient.payer,
