@@ -1,0 +1,84 @@
+name: Staging Build & Preview
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  staging:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm test
+
+      - name: Build (staging)
+        run: npm run build
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          VITE_AZURE_CLIENT_ID: ${{ secrets.VITE_AZURE_CLIENT_ID }}
+          VITE_AZURE_TENANT_ID: ${{ secrets.VITE_AZURE_TENANT_ID }}
+          VITE_REDIRECT_URI: ${{ secrets.VITE_REDIRECT_URI }}
+          VITE_PHI_ENCRYPTION_KEY: ${{ secrets.VITE_PHI_ENCRYPTION_KEY }}
+          VITE_SUPER_ADMIN_PASSWORD: ${{ secrets.VITE_SUPER_ADMIN_PASSWORD }}
+          VITE_DEFAULT_USER_PASSWORD: ${{ secrets.VITE_DEFAULT_USER_PASSWORD }}
+
+      - name: Upload staging artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: staging-build-${{ github.event.pull_request.number || github.run_id }}
+          path: dist/
+          retention-days: 7
+
+      - name: Post build summary to PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const distFiles = fs.readdirSync('dist/assets').filter(f => f.endsWith('.js') || f.endsWith('.css'));
+            const sizes = distFiles.map(f => {
+              const stats = fs.statSync(`dist/assets/${f}`);
+              return `| ${f} | ${(stats.size / 1024).toFixed(1)} KB |`;
+            }).join('\n');
+
+            const body = `## Staging Build Summary
+
+            | Status | Result |
+            |--------|--------|
+            | Lint | Passed |
+            | Tests | Passed |
+            | Build | Passed |
+
+            ### Bundle Sizes
+            | File | Size |
+            |------|------|
+            ${sizes}
+
+            Staging artifact available for download from this workflow run.`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body
+            });

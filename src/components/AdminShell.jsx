@@ -37,6 +37,8 @@ const PayerComparison = lazy(() => import('./admin/PayerComparison'));
 const MonthlyReport = lazy(() => import('./admin/MonthlyReport'));
 const YearOverYear = lazy(() => import('./admin/YearOverYear'));
 const DevGuide = lazy(() => import('./admin/DevGuide'));
+const PayerNegotiation = lazy(() => import('./admin/PayerNegotiation'));
+const RateChangeLog = lazy(() => import('./admin/RateChangeLog'));
 
 const ViewLoader = () => (
   <div style={{ textAlign: 'center', padding: '3rem', color: '#9ca3af' }}>
@@ -129,6 +131,8 @@ export default function AdminShell({ user, onLogout }) {
                 {tab === 'users'        && <UserManager user={user} />}
                 {tab === 'combos'       && <AdminCombos user={user} />}
                 {tab === 'log'          && <ActivityLog user={user} />}
+                {tab === 'negotiation'  && <PayerNegotiation />}
+                {tab === 'ratechanges'  && <RateChangeLog />}
                 {tab === 'feedback'     && <FeatureRequests user={user} isAdmin={true} />}
                 {tab === 'devguide'     && <DevGuide user={user} />}
               </Suspense>
