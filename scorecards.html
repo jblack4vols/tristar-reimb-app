@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tristar PT — Provider Scorecards</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Open+Sans:wght@400;500;600&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--o:#FF8200;--p:#FFEAD5;--b:#000;--w:#fff;--g:#16a34a;--r:#dc2626;--bl:#1D4ED8;--gr:#f8f8f8;--bdr:#e5e7eb}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Open Sans',sans-serif;background:var(--gr);color:var(--b);min-height:100vh}
+.app{max-width:1100px;margin:0 auto;padding:12px}
+.hdr{background:var(--b);border-radius:12px;padding:16px 20px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+.hdr h1{font-family:Montserrat;font-weight:700;font-size:20px;color:var(--o)}
+.hdr .sub{font-size:11px;color:#aaa}
+.tabs{display:flex;gap:4px;margin-bottom:12px;flex-wrap:wrap}
+.tab{padding:8px 16px;border-radius:8px;border:1px solid #ddd;background:var(--w);cursor:pointer;font-family:Montserrat;font-weight:600;font-size:13px;color:#333}
+.tab.active{background:var(--o);color:var(--w);border-color:var(--o)}
+.card{background:var(--w);border-radius:12px;padding:16px;border:1px solid var(--bdr);margin-bottom:12px}
+.card h2{font-family:Montserrat;font-size:15px;font-weight:700;color:var(--o);margin-bottom:10px}
+.card h3{font-family:Montserrat;font-size:12px;font-weight:700;color:#555;margin:8px 0;text-transform:uppercase;letter-spacing:.5px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+.fld{display:flex;flex-direction:column;flex:1;min-width:160px}
+.fld label{font-size:10px;font-weight:600;color:#555;margin-bottom:3px;font-family:Montserrat;text-transform:uppercase}
+.fld select{padding:9px 10px;border:2px solid #e0e0e0;border-radius:8px;font-size:13px;font-family:'Open Sans';background:var(--w)}
+.fld select:focus{outline:none;border-color:var(--o)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-bottom:12px}
+.stat{background:var(--w);border-radius:10px;padding:12px;border:1px solid var(--bdr);text-align:center}
+.stat .lb{font-size:10px;color:#777;text-transform:uppercase;letter-spacing:.5px;font-weight:600;font-family:Montserrat;margin-bottom:3px}
+.stat .vl{font-family:'Roboto Mono';font-size:22px;font-weight:700}
+.stat .sub{font-size:10px;color:#888;margin-top:2px}
+.vl.gd{color:var(--g)}.vl.wn{color:var(--o)}.vl.bd{color:var(--r)}
+.bar-chart{display:flex;align-items:flex-end;gap:3px;height:160px;padding:0 0 30px;position:relative;border-bottom:2px solid #ddd}
+.bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;position:relative}
+.bar-fill{width:100%;max-width:30px;border-radius:3px 3px 0 0;min-height:2px;transition:opacity .15s}
+.bar-col:hover .bar-fill{opacity:.7}
+.bar-val{font-family:'Roboto Mono';font-size:8px;font-weight:700;color:#333;position:absolute;top:-14px}
+.bar-lbl{font-size:8px;font-weight:600;color:#555;position:absolute;bottom:-22px;transform:rotate(-45deg);white-space:nowrap}
+.target-line{position:absolute;left:0;right:0;border-top:2px dashed var(--g);pointer-events:none}
+.target-line .lbl{position:absolute;right:0;background:var(--g);color:#fff;padding:1px 6px;font-size:9px;border-radius:3px;font-weight:700;top:-9px}
+.tbl{width:100%;border-collapse:collapse;font-size:12px}
+.tbl th{background:var(--o);color:var(--w);padding:8px;text-align:left;font-family:Montserrat;font-weight:600;font-size:11px;cursor:pointer;white-space:nowrap}
+.tbl th:hover{background:#e67400}
+.tbl td{padding:7px 8px;border-bottom:1px solid #eee}
+.tbl tr:nth-child(even){background:var(--p)}
+.tbl .num{font-family:'Roboto Mono';font-weight:700;text-align:right}
+.tbl .center{text-align:center}
+.heat-cell{padding:6px 4px;text-align:center;font-family:'Roboto Mono';font-size:10px;font-weight:700;color:#fff}
+.insight{padding:10px 12px;border-radius:8px;background:var(--p);margin-bottom:6px;font-size:12px;border-left:3px solid var(--o)}
+.insight b{color:var(--o)}
+.insight .num{font-family:'Roboto Mono';font-weight:700;color:var(--g)}
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;font-family:Montserrat}
+.b-good{background:var(--g);color:#fff}
+.b-warn{background:var(--o);color:#fff}
+.b-bad{background:var(--r);color:#fff}
+.loading{text-align:center;padding:40px;color:#999}
+.pin-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:2000}
+.pin-box{background:var(--w);border-radius:14px;padding:30px;text-align:center;max-width:340px}
+.pin-box h3{font-family:Montserrat;color:var(--o);margin-bottom:12px}
+.pin-box input{padding:12px;border:2px solid #ddd;border-radius:8px;font-size:18px;text-align:center;width:120px;font-family:'Roboto Mono';letter-spacing:8px}
+.pin-box input:focus{outline:none;border-color:var(--o)}
+.pin-box .err{color:var(--r);font-size:12px;margin-top:8px}
+.btn{padding:8px 14px;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:Montserrat}
+.btn-d{background:#fee;color:var(--r);border:1px solid #fbb}
+@media(max-width:640px){.hdr h1{font-size:17px}.bar-col{font-size:7px}}
+</style>
+</head>
+<body>
+<div class="app" id="app"><div class="loading">Loading scorecards...</div></div>
+
+<script>
+const SB='https://tkgygnninsbzzwlobtff.supabase.co';
+const SK='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrZ3lnbm5pbnNienp3bG9idGZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMyNDQzNTcsImV4cCI6MjA4ODgyMDM1N30.mNrg6fZ0PjznBdLTB-xjLX21vyXGlnsLihpFJ0MsAmE';
+
+async function sb(tbl,p={}){
+  let u=`${SB}/rest/v1/${tbl}`;
+  const q=[];
+  for(const[k,v] of Object.entries(p)) q.push(`${k}=${encodeURIComponent(v)}`);
+  if(q.length) u+='?'+q.join('&');
+  const r=await fetch(u,{headers:{'apikey':SK,'Authorization':`Bearer ${SK}`}});
+  return r.json();
+}
+
+const TARGET_UPV = 4.0;
+const SYS_TARGET_RPV = 95;
+let S = {
+  view:'mine', // 'mine','team','clinics','admin'
+  selectedProvider: null,
+  selectedClinic: null,
+  pwm: [],
+  cwm: [],
+  loading: true,
+  pinOk: false,
+};
+
+function fmtDate(d){return new Date(d+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'});}
+function fmtMoney(n){return '$' + Math.round(n).toLocaleString();}
+function ratingClass(upv){return upv>=3.8?'gd':upv>=3.3?'wn':'bd';}
+function ratingBadge(upv){const c=ratingClass(upv);return `<span class="badge b-${c==='gd'?'good':c==='wn'?'warn':'bad'}">${c==='gd'?'On Target':c==='wn'?'Close':'Below'}</span>`;}
+
+async function loadData(){
+  S.loading=true; render();
+  const [pwm, cwm] = await Promise.all([
+    sb('provider_weekly_metrics',{order:'week_ending'}),
+    sb('clinic_weekly_metrics',{order:'week_ending'}),
+  ]);
+  S.pwm = pwm; S.cwm = cwm;
+  if (!S.selectedProvider && pwm.length > 0) {
+    const saved = localStorage.getItem('tristar_provider');
+    if (saved) S.selectedProvider = saved;
+  }
+  S.loading=false; render();
+}
+
+function aggregateProvider(name){
+  const rows = S.pwm.filter(r=>r.provider_name===name).sort((a,b)=>a.week_ending.localeCompare(b.week_ending));
+  if (rows.length===0) return null;
+  const total = {visits:0, cms:0, cms_t:0, cms_missed:0, ama:0, ama_t:0, charges:0, mod:0};
+  rows.forEach(r=>{
+    total.visits += r.total_visits;
+    total.cms += r.cms_visits;
+    total.cms_t += r.cms_timed_units;
+    total.cms_missed += r.cms_missed_units;
+    total.ama += r.ama_visits;
+    total.ama_t += r.ama_timed_units;
+    total.charges += parseFloat(r.total_charges||0);
+    total.mod += r.modifier_at_risk_count;
+  });
+  total.cms_avg = total.cms ? total.cms_t/total.cms : 0;
+  total.ama_avg = total.ama ? total.ama_t/total.ama : 0;
+  total.lost_ytd = total.cms_missed * 22;
+  total.lost_annual = total.lost_ytd * 3;
+  return {rows, total, latest:rows[rows.length-1]};
+}
+
+function aggregateSystem(){
+  const total = {cms:0, cms_t:0, cms_missed:0, charges:0, visits:0};
+  S.pwm.forEach(r=>{
+    total.cms += r.cms_visits;
+    total.cms_t += r.cms_timed_units;
+    total.cms_missed += r.cms_missed_units;
+    total.charges += parseFloat(r.total_charges||0);
+    total.visits += r.total_visits;
+  });
+  total.cms_avg = total.cms ? total.cms_t/total.cms : 0;
+  return total;
+}
+
+function getTopUPV(){
+  const byProv = {};
+  S.pwm.forEach(r=>{
+    if (!byProv[r.provider_name]) byProv[r.provider_name] = {cms:0, cms_t:0};
+    byProv[r.provider_name].cms += r.cms_visits;
+    byProv[r.provider_name].cms_t += r.cms_timed_units;
+  });
+  let max = 0;
+  for (const p of Object.values(byProv)) {
+    if (p.cms >= 50) {
+      const u = p.cms_t/p.cms;
+      if (u > max) max = u;
+    }
+  }
+  return max;
+}
+
+function render(){
+  const a = document.getElementById('app');
+  if (S.loading) { a.innerHTML = '<div class="loading">Loading scorecards...</div>'; return; }
+
+  let h = `<div class="hdr">
+    <div><h1>Provider Scorecards</h1><div class="sub">Tristar Physical Therapy · Live Data</div></div>
+    <div style="font-family:'Roboto Mono';font-size:10px;color:#888">Last updated: ${new Date().toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})}</div>
+  </div>`;
+
+  // Tabs
+  h += `<div class="tabs">
+    <div class="tab ${S.view==='mine'?'active':''}" onclick="go('mine')">My Scorecard</div>
+    <div class="tab ${S.view==='team'?'active':''}" onclick="go('team')">Team Leaderboard</div>
+    <div class="tab ${S.view==='clinics'?'active':''}" onclick="go('clinics')">Clinics</div>
+    <div class="tab ${S.view==='admin'?'active':''}" onclick="go('admin')">Owner View</div>
+  </div>`;
+
+  if (S.view === 'mine') h += renderMine();
+  else if (S.view === 'team') h += renderTeam();
+  else if (S.view === 'clinics') h += renderClinics();
+  else if (S.view === 'admin') h += renderAdmin();
+
+  a.innerHTML = h;
+}
+
+function renderMine(){
+  const providers = [...new Set(S.pwm.map(r=>r.provider_name))].sort();
+  let h = `<div class="card">
+    <div class="row">
+      <div class="fld"><label>Select Your Name</label>
+        <select onchange="selectProvider(this.value)">
+          <option value="">Choose...</option>
+          ${providers.map(p=>`<option value="${p}" ${S.selectedProvider===p?'selected':''}>${p}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+  </div>`;
+
+  if (!S.selectedProvider) return h + '<div class="card"><div class="loading">Pick your name to see your scorecard</div></div>';
+
+  const data = aggregateProvider(S.selectedProvider);
+  if (!data) return h + '<div class="card">No data available</div>';
+
+  const sys = aggregateSystem();
+  const topU = getTopUPV();
+  const t = data.total;
+  const upvCls = ratingClass(t.cms_avg);
+
+  h += `<div class="stats">
+    <div class="stat"><div class="lb">YTD CMS Avg UPV</div><div class="vl ${upvCls}">${t.cms_avg.toFixed(2)}</div><div class="sub">target 4.00</div></div>
+    <div class="stat"><div class="lb">System Avg</div><div class="vl">${sys.cms_avg.toFixed(2)}</div><div class="sub">where everyone is</div></div>
+    <div class="stat"><div class="lb">Top Performer</div><div class="vl gd">${topU.toFixed(2)}</div><div class="sub">where the bar is</div></div>
+    <div class="stat"><div class="lb">YTD Visits</div><div class="vl">${t.visits.toLocaleString()}</div><div class="sub">all payers</div></div>
+    <div class="stat"><div class="lb">$ Lost YTD</div><div class="vl bd">${fmtMoney(t.lost_ytd)}</div><div class="sub">missed units</div></div>
+    <div class="stat"><div class="lb">Annualized $ Lost</div><div class="vl bd">${fmtMoney(t.lost_annual)}</div><div class="sub">if pattern continues</div></div>
+  </div>`;
+
+  // UPV trend chart
+  h += `<div class="card"><h2>Your Weekly UPV Trend (CMS Visits)</h2>`;
+  if (data.rows.length === 0) {
+    h += '<div class="loading">No weekly data</div>';
+  } else {
+    const max = Math.max(...data.rows.map(r=>r.cms_avg_upv||0), 4.5);
+    h += `<div class="bar-chart">`;
+    h += `<div class="target-line" style="bottom:${(4/max)*130}px"><span class="lbl">Target 4.0</span></div>`;
+    data.rows.forEach(r=>{
+      const upv = parseFloat(r.cms_avg_upv||0);
+      const pct = (upv/max)*130;
+      const c = ratingClass(upv);
+      const color = c==='gd'?'#16a34a':c==='wn'?'#FF8200':'#dc2626';
+      h += `<div class="bar-col" title="${r.week_ending}: ${upv.toFixed(2)} UPV, ${r.cms_visits} visits">
+        <div class="bar-val">${upv.toFixed(1)}</div>
+        <div class="bar-fill" style="height:${Math.max(pct,2)}px;background:${color}"></div>
+        <div class="bar-lbl">${fmtDate(r.week_ending)}</div>
+      </div>`;
+    });
+    h += `</div>`;
+  }
+  h += `</div>`;
+
+  // Latest week vs prior week
+  if (data.rows.length >= 2) {
+    const last = data.rows[data.rows.length-1];
+    const prev = data.rows[data.rows.length-2];
+    const trend = parseFloat(last.cms_avg_upv||0) - parseFloat(prev.cms_avg_upv||0);
+    h += `<div class="card"><h2>Last Week vs Prior Week</h2>
+      <div class="row" style="font-size:14px">
+        <div><strong>Week of ${fmtDate(last.week_ending)}:</strong> ${parseFloat(last.cms_avg_upv||0).toFixed(2)} UPV (${last.cms_visits} CMS visits)</div>
+        <div style="color:${trend>=0?'#16a34a':'#dc2626'};font-weight:700">
+          ${trend>=0?'↑':'↓'} ${Math.abs(trend).toFixed(2)} from prior week
+        </div>
+      </div>
+    </div>`;
+  }
+
+  // Coaching insights
+  h += `<div class="card"><h2 style="color:#000">Your 3 Actions This Week</h2>`;
+  const acts = [];
+  if (t.cms_avg < 3.5) {
+    acts.push(`Bill 4 timed units on every Medicare/MA visit. Standard recipe: <span class="num">97140 + 97110 + 97110 + 97530</span>. Pushing your UPV from <span class="num">${t.cms_avg.toFixed(2)}</span> to 4.00 = <span class="num">+${fmtMoney((4-t.cms_avg)*t.cms*22)}</span>/year.`);
+  } else if (t.cms_avg < 3.8) {
+    acts.push(`You're close to target at <span class="num">${t.cms_avg.toFixed(2)}</span> UPV. Push the last 1-2 visits/day from 3 to 4 timed units to capture the final <span class="num">${fmtMoney((4-t.cms_avg)*t.cms*22)}</span>/year.`);
+  } else {
+    acts.push(`You're <b>at or above target</b> at <span class="num">${t.cms_avg.toFixed(2)}</span> UPV. Help coach a peer at your clinic — top performers replicate.`);
+  }
+
+  const pct_under = t.cms ? (t.cms_missed/t.cms*100/4 + 100*t.cms_missed/(t.cms*4)) : 0;
+  if (t.cms_missed > 100) {
+    acts.push(`You have <span class="num">${t.cms_missed}</span> missed units YTD. Audit your last 5 short visits — most fixable issues are documenting the 4th unit you already performed.`);
+  } else {
+    acts.push(`Strong consistency — only <span class="num">${t.cms_missed}</span> missed units YTD. Maintain the discipline.`);
+  }
+
+  if (data.latest && data.latest.modifier_at_risk_count > 50) {
+    acts.push(`<b>Modifier risk:</b> <span class="num">${data.latest.modifier_at_risk_count}</span> Medicare/MA visits last week need CQ/CO modifier verification with billing.`);
+  } else if (t.ama > 100) {
+    acts.push(`<b>Commercial opportunity:</b> ${t.ama} commercial visits at avg <span class="num">${t.ama_avg.toFixed(2)}</span> UPV. AMA rules allow up to 8 timed units — push to 5 when clinically justified.`);
+  } else {
+    acts.push(`<b>Reserve 1-2 same-day eval slots/day.</b> Acute commercial referrals = highest single-visit revenue.`);
+  }
+
+  acts.forEach((a,i)=>{
+    h += `<div class="insight">${i+1}. ${a}</div>`;
+  });
+  h += `</div>`;
+
+  // Top payers / CPT
+  if (data.latest) {
+    h += `<div class="card"><h2 style="color:#000">Latest Week Highlights</h2>
+      <div class="row">
+        <div style="flex:1;min-width:240px">
+          <h3>Top Payer</h3>
+          <div style="font-size:13px"><b>${data.latest.top_payer||'—'}</b> · ${data.latest.top_payer_visits||0} visits</div>
+        </div>
+        <div style="flex:1;min-width:240px">
+          <h3>Top CPT Code</h3>
+          <div style="font-size:13px"><b>${data.latest.top_cpt||'—'}</b> · ${data.latest.top_cpt_count||0} bills</div>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  return h;
+}
+
+function renderTeam(){
+  // Aggregate by provider
+  const byProv = {};
+  S.pwm.forEach(r=>{
+    if (!byProv[r.provider_name]) byProv[r.provider_name] = {name:r.provider_name, ptype:r.provider_type, facility:r.facility, cms:0, cms_t:0, cms_missed:0, visits:0};
+    const p = byProv[r.provider_name];
+    p.cms += r.cms_visits;
+    p.cms_t += r.cms_timed_units;
+    p.cms_missed += r.cms_missed_units;
+    p.visits += r.total_visits;
+  });
+  const ranked = Object.values(byProv)
+    .filter(p=>p.visits>=30)
+    .map(p=>({...p, upv: p.cms ? p.cms_t/p.cms : 0, lost: p.cms_missed*22*3}))
+    .sort((a,b)=>b.upv - a.upv);
+
+  let h = `<div class="card"><h2>Team Leaderboard — YTD 2026 CMS UPV</h2>
+    <div style="overflow-x:auto"><table class="tbl">
+      <thead><tr><th>Rank</th><th>Provider</th><th>Type</th><th>Location</th><th class="num">CMS Visits</th><th class="num">Avg UPV</th><th class="num">Status</th><th class="num">Annual $ at Stake</th></tr></thead>
+      <tbody>`;
+  ranked.forEach((p,i)=>{
+    h += `<tr>
+      <td class="num">${i+1}</td>
+      <td><b>${p.name}</b></td>
+      <td class="center">${p.ptype||'—'}</td>
+      <td>${p.facility||'—'}</td>
+      <td class="num">${p.cms.toLocaleString()}</td>
+      <td class="num" style="color:${p.upv>=3.8?'#16a34a':p.upv>=3.3?'#FF8200':'#dc2626'}">${p.upv.toFixed(2)}</td>
+      <td class="center">${ratingBadge(p.upv)}</td>
+      <td class="num" style="color:#dc2626">${fmtMoney(p.lost)}</td>
+    </tr>`;
+  });
+  h += `</tbody></table></div></div>`;
+  return h;
+}
+
+function renderClinics(){
+  // Aggregate by facility
+  const byFac = {};
+  S.cwm.forEach(r=>{
+    if (!byFac[r.facility]) byFac[r.facility] = {fac:r.facility, weeks:[]};
+    byFac[r.facility].weeks.push(r);
+  });
+  const facs = Object.values(byFac).map(f=>{
+    const total = f.weeks.reduce((a,r)=>({
+      cms_v:a.cms_v+r.cms_visits, cms_t:a.cms_t+r.cms_timed_units,
+      cms_m:a.cms_m+r.cms_missed_units, visits:a.visits+r.total_visits,
+      rev:a.rev+parseFloat(r.total_revenue||0)
+    }),{cms_v:0,cms_t:0,cms_m:0,visits:0,rev:0});
+    f.upv = total.cms_v ? total.cms_t/total.cms_v : 0;
+    f.rpv = total.visits ? total.rev/total.visits : 0;
+    f.missed = total.cms_m;
+    f.cms_v = total.cms_v;
+    f.lost_annual = total.cms_m * 22 * 3;
+    f.weeks.sort((a,b)=>a.week_ending.localeCompare(b.week_ending));
+    return f;
+  }).sort((a,b)=>a.upv - b.upv);
+
+  let h = `<div class="card"><h2>Clinic Performance — YTD 2026</h2>
+    <table class="tbl">
+      <thead><tr><th>Clinic</th><th class="num">CMS Visits</th><th class="num">Avg UPV</th><th class="num">Avg RPV</th><th class="num">Missed Units</th><th class="num">Annual $ at Stake</th></tr></thead>
+      <tbody>`;
+  facs.forEach(f=>{
+    h += `<tr>
+      <td><b>${f.fac}</b></td>
+      <td class="num">${f.cms_v.toLocaleString()}</td>
+      <td class="num" style="color:${f.upv>=3.8?'#16a34a':f.upv>=3.3?'#FF8200':'#dc2626'}">${f.upv.toFixed(2)}</td>
+      <td class="num">${fmtMoney(f.rpv)}</td>
+      <td class="num">${f.missed.toLocaleString()}</td>
+      <td class="num" style="color:#dc2626">${fmtMoney(f.lost_annual)}</td>
+    </tr>`;
+  });
+  h += `</tbody></table></div>`;
+
+  // Heatmap
+  h += `<div class="card"><h2>Clinic UPV Heatmap (Weekly)</h2>
+    <div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Clinic</th>`;
+  const allWeeks = [...new Set(S.cwm.map(r=>r.week_ending))].sort();
+  allWeeks.forEach(w=>{ h += `<th>${fmtDate(w)}</th>`; });
+  h += `</tr></thead><tbody>`;
+  facs.forEach(f=>{
+    h += `<tr><td><b>${f.fac}</b></td>`;
+    allWeeks.forEach(w=>{
+      const wk = f.weeks.find(x=>x.week_ending===w);
+      if (wk) {
+        const upv = parseFloat(wk.cms_avg_upv||0);
+        const c = upv>=3.8?'#16a34a':upv>=3.3?'#FF8200':upv>=2.8?'#dc2626':'#7f1d1d';
+        h += `<td class="heat-cell" style="background:${c}">${upv.toFixed(2)}</td>`;
+      } else {
+        h += `<td class="heat-cell" style="background:#e5e7eb;color:#888">—</td>`;
+      }
+    });
+    h += `</tr>`;
+  });
+  h += `</tbody></table></div></div>`;
+
+  return h;
+}
+
+function renderAdmin(){
+  if (!S.pinOk) {
+    setTimeout(()=>{
+      const inp = document.getElementById('pinIn');
+      if (inp) inp.focus();
+    },50);
+    return `<div class="pin-overlay"><div class="pin-box"><h3>Owner Dashboard</h3>
+      <p style="font-size:13px;color:#555;margin-bottom:12px">Enter PIN to access</p>
+      <input id="pinIn" type="password" maxlength="4" oninput="checkPin(this.value)" autofocus/>
+      <div class="err" id="pinErr"></div>
+    </div></div>` + renderTeam();
+  }
+
+  const sys = aggregateSystem();
+  const topU = getTopUPV();
+  const totalLost = S.pwm.reduce((a,r)=>a+r.cms_missed_units,0)*22;
+  const totalAnnual = totalLost * 3;
+
+  let h = `<div class="stats">
+    <div class="stat"><div class="lb">System UPV</div><div class="vl ${ratingClass(sys.cms_avg)}">${sys.cms_avg.toFixed(2)}</div><div class="sub">target 4.00</div></div>
+    <div class="stat"><div class="lb">Top Performer</div><div class="vl gd">${topU.toFixed(2)}</div></div>
+    <div class="stat"><div class="lb">CMS Visits YTD</div><div class="vl">${sys.cms.toLocaleString()}</div></div>
+    <div class="stat"><div class="lb">YTD $ Lost</div><div class="vl bd">${fmtMoney(totalLost)}</div></div>
+    <div class="stat"><div class="lb">Annualized</div><div class="vl bd">${fmtMoney(totalAnnual)}</div><div class="sub">opportunity</div></div>
+  </div>`;
+
+  // Coaching flags
+  const byProv = {};
+  S.pwm.forEach(r=>{
+    if (!byProv[r.provider_name]) byProv[r.provider_name] = {name:r.provider_name, ptype:r.provider_type, facility:r.facility, weeks:[]};
+    byProv[r.provider_name].weeks.push(r);
+  });
+
+  const flags = Object.values(byProv).map(p=>{
+    p.weeks.sort((a,b)=>a.week_ending.localeCompare(b.week_ending));
+    const total = p.weeks.reduce((a,r)=>({cms:a.cms+r.cms_visits, cms_t:a.cms_t+r.cms_timed_units, missed:a.missed+r.cms_missed_units}),{cms:0,cms_t:0,missed:0});
+    p.upv = total.cms ? total.cms_t/total.cms : 0;
+    p.cms = total.cms;
+    p.lost = total.missed * 22 * 3;
+    // Trend: last 4 weeks vs prior 4 weeks
+    if (p.weeks.length >= 8) {
+      const recent = p.weeks.slice(-4);
+      const prior = p.weeks.slice(-8,-4);
+      const r_upv = recent.reduce((a,r)=>a+(r.cms_visits?r.cms_timed_units:0),0)/Math.max(recent.reduce((a,r)=>a+r.cms_visits,0),1);
+      const p_upv = prior.reduce((a,r)=>a+(r.cms_visits?r.cms_timed_units:0),0)/Math.max(prior.reduce((a,r)=>a+r.cms_visits,0),1);
+      p.trend = r_upv - p_upv;
+    } else { p.trend = 0; }
+    return p;
+  }).filter(p=>p.cms>=30);
+
+  // Worst offenders
+  const worst = [...flags].sort((a,b)=>b.lost-a.lost).slice(0,5);
+  let hw = `<div class="card"><h2 style="color:#dc2626">Coaching Flags — Highest $ Lost</h2>`;
+  worst.forEach(p=>{
+    hw += `<div class="insight" style="border-color:#dc2626"><b>${p.name}</b> (${p.ptype}, ${p.facility}) — UPV <span class="num">${p.upv.toFixed(2)}</span> across ${p.cms} CMS visits. Annualized $ at stake: <span class="num">${fmtMoney(p.lost)}</span>. Trend last 4 wks: <span style="color:${p.trend>=0?'#16a34a':'#dc2626'}">${p.trend>=0?'+':''}${p.trend.toFixed(2)}</span>.</div>`;
+  });
+  hw += `</div>`;
+
+  // Improvers
+  const improvers = [...flags].filter(p=>p.trend>0.2).sort((a,b)=>b.trend-a.trend).slice(0,5);
+  if (improvers.length > 0) {
+    hw += `<div class="card"><h2 style="color:#16a34a">Top Improvers (last 4 weeks)</h2>`;
+    improvers.forEach(p=>{
+      hw += `<div class="insight" style="border-color:#16a34a"><b>${p.name}</b> (${p.ptype}, ${p.facility}) — UPV trending up by <span class="num" style="color:#16a34a">+${p.trend.toFixed(2)}</span>. Now at <span class="num">${p.upv.toFixed(2)}</span>.</div>`;
+    });
+    hw += `</div>`;
+  }
+
+  return h + hw + renderTeam();
+}
+
+// Actions
+function go(v){ S.view = v; render(); }
+function selectProvider(n){
+  S.selectedProvider = n;
+  if (n) localStorage.setItem('tristar_provider', n);
+  render();
+}
+function checkPin(v){
+  if (v === '1234') { S.pinOk = true; render(); }
+  else if (v.length === 4) { document.getElementById('pinErr').textContent = 'Wrong PIN'; }
+}
+
+// Init
+loadData();
+</script>
+</body>
+</html>
