@@ -79,6 +79,11 @@ describe('calcConfig — getRuleWarnings', () => {
     expect(w.some(x => x.severity === 'error')).toBe(true);
   });
 
+  it('flags suffix-named multi-unit variants (AQ2) too, not just prefixed ones', () => {
+    expect(getRuleWarnings('Medicare', ['AQ2']).some(x => x.severity === 'error')).toBe(true);
+    expect(getRuleWarnings('Humana Medicare', ['AQ3']).some(x => x.severity === 'error')).toBe(true);
+  });
+
   it('warns when Aetna has more than 4 codes', () => {
     const w = getRuleWarnings('Aetna', ['TX', 'NR', 'MT', 'TA', 'GT']);
     expect(w.some(x => /4 lowest-rate/.test(x.message))).toBe(true);

@@ -46,6 +46,7 @@ export default function CalcView({ user, templateCodes, selectedPatient, onClear
   const [logSaving, setLogSaving]       = useState(false);
   const [toast, setToast]           = useState('');
   const [copied, setCopied]         = useState(false);
+  const [combosVersion, setCombosVersion] = useState(0); // bump to refresh combo-derived memos
   const toastTimer = useRef(null);
 
   const showToast = msg => {
@@ -97,8 +98,11 @@ export default function CalcView({ user, templateCodes, selectedPatient, onClear
 
   // Resolve selection { base: qty } -> per-line items + flat resolved-key array
   const lineItems = useMemo(() => Object.entries(selected).map(([key, qty]) => {
-    const r = getLineRate(key, qty, payer, RATES);
-    return { displayKey: key, qty, ...r, label: CODE_LABELS[key] || key, cpt: CODE_META[key]?.cpt || '' };
+    // Clamp qty to the units the current payer's rate table actually prices,
+    // so a stale template/combo can't leave a line unpriced ($0/Not covered).
+    const clampedQty = Math.min(qty, effectiveMaxUnits(key, RATES));
+    const r = getLineRate(key, clampedQty, payer, RATES);
+    return { displayKey: key, qty: clampedQty, ...r, label: CODE_LABELS[key] || key, cpt: CODE_META[key]?.cpt || '' };
   }), [selected, payer, RATES, CODE_LABELS]);
   const resolvedCodes = useMemo(() => lineItems.map(li => li.resolvedKey), [lineItems]);
   const codeCount = lineItems.length;
@@ -145,7 +149,7 @@ export default function CalcView({ user, templateCodes, selectedPatient, onClear
     const freq = {};
     combos.forEach(cb => (cb.codes || []).forEach(c => { freq[c] = (freq[c] || 0) + 1; }));
     return Object.entries(freq).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([c]) => c);
-  }, [provider]);
+  }, [provider, combosVersion]);
 
   // ----- Selection actions -----
   const addCode    = base => setSelected(p => ({ ...p, [base]: 1 }));
@@ -173,7 +177,9 @@ export default function CalcView({ user, templateCodes, selectedPatient, onClear
     try {
       const savedName = patientName.trim();
       const pi = ALL_PROVIDERS.find(p => p.name === provider) || null;
-      await supabase.from('billing_entries').insert({
+      // Supabase returns errors in the response (no throw) — check it so we
+      // don't show success / clear the form on a silently-failed insert.
+      const { error } = await supabase.from('billing_entries').insert({
         patient_name: encryptPHI(savedName),
         codes: [...resolvedCodes],
         payer: mode === 'fee' ? payer : cPayer,
@@ -184,8 +190,9 @@ export default function CalcView({ user, templateCodes, selectedPatient, onClear
         notes: encryptPHI(visitNotes.trim()),
         entered_by: user.username,
       });
+      if (error) throw error;
       // Do NOT log patient name in activity log — HIPAA
-      await store.pushLog({ user: user.username, action: 'log_visit', detail: `Visit logged — $${total.toFixed(2)}` });
+      await store.pushLog({ user: user.username, action: 'log_visit', detail: `Visit logged — ${fmtUSD(total)}` });
       setPatientName('');
       setVisitNotes('');
       setShowLogVisit(false);
@@ -209,6 +216,7 @@ export default function CalcView({ user, templateCodes, selectedPatient, onClear
       savedAt: new Date().toISOString(),
     };
     await store.setCombos([...all, nc]);
+    setCombosVersion(v => v + 1); // refresh Quick Picks (favCodes)
     await store.pushLog({ user: user.username, action: 'save_combo', detail: `"${n}"` });
     setComboName('');
     setShowSave(false);
@@ -343,10 +351,11 @@ export default function CalcView({ user, templateCodes, selectedPatient, onClear
             {favCodes.map(c => {
               const active = !!selected[splitResolved(c).base];
               return (
-                <span key={c} className="chip" onClick={() => toggleResolved(c)}
-                  style={{ cursor: 'pointer', background: active ? '#FF8200' : undefined, color: active ? '#fff' : undefined }}>
+                <button key={c} type="button" className="chip" onClick={() => toggleResolved(c)}
+                  aria-pressed={active}
+                  style={{ cursor: 'pointer', border: 'none', background: active ? '#FF8200' : undefined, color: active ? '#fff' : undefined }}>
                   ⭐ {c}
-                </span>
+                </button>
               );
             })}
           </div>
@@ -470,7 +479,7 @@ export default function CalcView({ user, templateCodes, selectedPatient, onClear
                       </div>
                     </div>
                     <div style={{ fontSize: 13, color: '#6b7280', marginBottom: 12 }}>
-                      <strong>{mode === 'fee' ? payer : cPayer}</strong> · {codeCount} code{codeCount !== 1 ? 's' : ''} · <strong style={{ color: '#FF8200' }}>${total.toFixed(2)}</strong>
+                      <strong>{mode === 'fee' ? payer : cPayer}</strong> · {codeCount} code{codeCount !== 1 ? 's' : ''} · <strong style={{ color: '#FF8200' }}>{fmtUSD(total)}</strong>
                       {provider && <span> · {provider}</span>}
                     </div>
                     <div style={{ display: 'flex', gap: 8 }}>
@@ -539,7 +548,7 @@ export default function CalcView({ user, templateCodes, selectedPatient, onClear
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
               <div>
                 <div className="total-label">Expected Reimbursement</div>
-                <div className="total-amount" style={{ color: codeCount > 0 && payer && total > 0 ? undefined : '#9ca3af' }}>${total.toFixed(2)}</div>
+                <div className="total-amount" style={{ color: codeCount > 0 && payer && total > 0 ? undefined : '#9ca3af' }}>{fmtUSD(total)}</div>
                 {!payer && codeCount === 0 && <div style={{ fontSize: 14, color: '#9ca3af', marginTop: 6 }}>Select a payer and add codes above.</div>}
                 {!payer && codeCount > 0 && <div style={{ fontSize: 14, color: '#9ca3af', marginTop: 6 }}>Select a payer to see rates.</div>}
               </div>
@@ -580,7 +589,7 @@ export default function CalcView({ user, templateCodes, selectedPatient, onClear
                         <span style={{ fontSize: 13, color: isRevCard ? 'rgba(255,255,255,0.6)' : '#6b7280', display: 'block', lineHeight: 1.3 }}>{li.label}</span>
                       </div>
                       <div style={{ fontWeight: 700, fontSize: 14, flexShrink: 0, color: isRevCard ? '#fff' : '#1a1a1a' }}>
-                        {li.billingMode === 'flat' ? 'Incl.' : li.billingMode === 'special' ? '$0' : li.covered ? `$${li.rate.toFixed(2)}` : 'Not covered'}
+                        {li.billingMode === 'flat' ? 'Incl.' : li.billingMode === 'special' ? '$0' : li.covered ? fmtUSD(li.rate) : 'Not covered'}
                       </div>
                     </div>
                   ))}
@@ -622,22 +631,22 @@ export default function CalcView({ user, templateCodes, selectedPatient, onClear
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 }}>
                 <div>
                   <div className="total-label">Per Visit</div>
-                  <div className="total-amount" style={{ color: '#FF8200' }}>${total.toFixed(2)}</div>
+                  <div className="total-amount" style={{ color: '#FF8200' }}>{fmtUSD(total)}</div>
                 </div>
                 <div>
                   <div className="total-label">Projected Total ({projVisits} visit{projVisits !== 1 ? 's' : ''})</div>
-                  <div className="total-amount" style={{ color: '#FF8200' }}>${(total * projVisits).toFixed(2)}</div>
+                  <div className="total-amount" style={{ color: '#FF8200' }}>{fmtUSD(total * projVisits)}</div>
                 </div>
               </div>
               {visitsPerWeek > 0 && (
                 <div style={{ borderTop: '1.5px solid #e5e7eb', marginTop: 14, paddingTop: 14, display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
                   <div>
                     <div className="total-label">Weekly ({visitsPerWeek}×/wk)</div>
-                    <div className="total-amount" style={{ color: '#FF8200' }}>${(total * visitsPerWeek).toFixed(2)}</div>
+                    <div className="total-amount" style={{ color: '#FF8200' }}>{fmtUSD(total * visitsPerWeek)}</div>
                   </div>
                   <div>
                     <div className="total-label">Monthly (×4.33 wks)</div>
-                    <div className="total-amount" style={{ color: '#FF8200' }}>${(total * visitsPerWeek * 4.33).toFixed(2)}</div>
+                    <div className="total-amount" style={{ color: '#FF8200' }}>{fmtUSD(total * visitsPerWeek * 4.33)}</div>
                   </div>
                 </div>
               )}
@@ -654,7 +663,7 @@ export default function CalcView({ user, templateCodes, selectedPatient, onClear
           </div>
           <div className="card-surface">
             <div className="total-label">Expected Reimbursement</div>
-            <div className="total-amount" style={{ color: total > 0 ? '#FF8200' : '#9ca3af' }}>${total.toFixed(2)}</div>
+            <div className="total-amount" style={{ color: total > 0 ? '#FF8200' : '#9ca3af' }}>{fmtUSD(total)}</div>
             {cPayer && (
               <div style={{ fontSize: 14, color: '#6b7280', marginTop: 8 }}>
                 <strong>{cPayer}</strong> · {visits} visit{visits !== 1 ? 's' : ''} · <strong>${CONTRACT_PAYERS[cPayer]}</strong>/visit

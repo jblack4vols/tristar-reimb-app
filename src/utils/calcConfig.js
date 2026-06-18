@@ -104,6 +104,18 @@ const VARIANT_TO_BASE = (() => {
   return map;
 })();
 
+// Every rate-table key that represents 2+ units. Note variants use mixed
+// naming — digit-prefixed (2TX, 3NR) AND suffixed (AQ2…AQ5, 2IONTO) — so a
+// `/^[2-4]/` regex is NOT sufficient; use this set instead.
+const MULTI_UNIT_KEYS = new Set(
+  Object.values(UNIT_KEY_MAP).flatMap((variants) =>
+    Object.entries(variants).filter(([qty]) => Number(qty) > 1).map(([, key]) => key)
+  )
+);
+
+// True if the key is a 2+ unit variant, regardless of prefix/suffix naming.
+export const isMultiUnitKey = (key) => MULTI_UNIT_KEYS.has(key);
+
 export const STRAPPING_KEYS = ['ST', 'SSH', 'SE', 'SHAND', 'SHIP', 'SK', 'SF', 'STOE'];
 
 // Tier-1 payer rule engine. `test` receives the resolved rate-table keys
@@ -124,13 +136,10 @@ const BCBS_PREFERENCE_RULES = [
 ];
 
 export const PAYER_RULES = {
-  _global: [
-    {
-      test: (keys) => keys.some((k) => /^[2-4]?MT$/.test(k)) && keys.includes('97124'),
-      message: '97140 (Manual) and 97124 (Massage) cannot be billed together — all payers.',
-      severity: 'error',
-    },
-  ],
+  // 97124 (Massage) is not a selectable code in this app, so the historical
+  // "97140 + 97124 cannot be billed together" rule could never fire. Omitted
+  // until/unless massage becomes billable here.
+  _global: [],
   Aetna: [
     {
       test: (keys) => keys.some((k) => /^[2-4]?MT$/.test(k)) && keys.some((k) => /^[2-4]?TA$/.test(k)),
@@ -150,15 +159,15 @@ export const PAYER_RULES = {
       severity: 'error',
     },
     {
-      test: (keys) => keys.some((k) => /^[2-4]/.test(k)),
-      message: 'No 97 modifier on multi-unit codes (codes beginning with 2/3/4).',
+      test: (keys) => keys.some(isMultiUnitKey),
+      message: 'No 97 modifier on multi-unit codes.',
       severity: 'error',
     },
   ],
   Medicare: [
     {
       test: (keys) =>
-        keys.some((k) => /^[2-4]/.test(k)) ||
+        keys.some(isMultiUnitKey) ||
         keys.some((k) => /^DN/.test(k)) ||
         keys.some((k) => /^S/.test(k) && k !== 'SELFCARE' && k !== 'SI'),
       message: 'No 59 modifier on multi-unit codes, dry needling, or strapping codes.',
