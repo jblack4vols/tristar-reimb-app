@@ -7,6 +7,7 @@ import { encryptPHI } from '../utils/crypto';
 import EightMinuteRule from './EightMinuteRule';
 import BillingAlerts from './BillingAlerts';
 import PdfExport from './PdfExport';
+import PayerCheatSheet from './PayerCheatSheet';
 import { getOptimizationSuggestions } from '../utils/billingOptimizer';
 import { getMissingCodeSuggestions } from '../utils/codeSuggestions';
 
@@ -182,6 +183,11 @@ export default function CalcView({ user, templateCodes, selectedPatient, onClear
   return (
     <div>
       {toast && <div className="toast">{toast}</div>}
+
+      {/* Per-payer cheat sheet — auto-appears to the right when a payer is picked */}
+      {mode === 'fee' && payer && (
+        <PayerCheatSheet payer={payer} rates={RATES} billingRules={BILLING_RULES[payer] || []} />
+      )}
 
       {/* Getting started guide — show only when nothing selected */}
       {!payer && codes.length === 0 && mode === 'fee' && (
