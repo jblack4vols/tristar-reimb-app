@@ -1215,6 +1215,60 @@ input:focus, select:focus { border-color: var(--orange); box-shadow: 0 0 0 3px r
   .optimization-tip { padding: 12px 14px; font-size: 13px; }
 }
 
+/* ── Calculator: header banner, group counts, steppered code chips ── */
+.calc-header {
+  display: flex; justify-content: space-between; align-items: center; gap: 16px;
+  background: linear-gradient(135deg, #FF8200 0%, #ff9d3d 100%);
+  color: #fff; border-radius: 12px; padding: 14px 18px; margin-bottom: 14px;
+}
+.calc-header-title { font-weight: 800; font-size: 16px; line-height: 1.2; }
+.calc-header-sub { font-size: 12px; opacity: 0.9; margin-top: 2px; }
+.calc-header-total { text-align: right; flex-shrink: 0; }
+.calc-header-total-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.85; }
+.calc-header-total-amt { font-size: 26px; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
+
+.group-tab-count {
+  display: inline-block; margin-left: 6px; background: #FF8200; color: #fff;
+  border-radius: 999px; font-size: 10px; font-weight: 800; padding: 0 6px;
+  min-width: 18px; text-align: center;
+}
+.group-pill.active .group-tab-count { background: #000; color: #FF8200; }
+
+.code-chip-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px; margin-bottom: 14px;
+}
+.code-chip-card {
+  border: 1px solid #e5e7eb; border-radius: 10px; padding: 10px; background: #fff;
+  transition: border-color 0.15s, background 0.15s;
+}
+.code-chip-card.active { border-color: #FF8200; background: #fff7ed; box-shadow: 0 1px 2px rgba(0,0,0,0.06); }
+.code-chip-card.not-covered { opacity: 0.6; }
+.code-chip-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+.code-chip-key { font-weight: 800; font-size: 13px; }
+.code-chip-cpt { color: #9ca3af; font-size: 11px; margin-left: 6px; }
+.code-chip-desc { font-size: 12px; color: #6b7280; margin-top: 2px; line-height: 1.3; min-height: 16px; }
+.cc-rate { font-size: 13px; font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.cc-rate-green { color: #16a34a; }
+.cc-rate-red { color: #b71c1c; font-size: 11px; text-transform: uppercase; }
+.cc-rate-muted { color: #9ca3af; font-size: 11px; text-transform: uppercase; }
+.code-chip-actions { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 8px; }
+.code-chip-stepper { display: flex; align-items: center; gap: 4px; border: 1px solid #e5e7eb; border-radius: 8px; }
+.code-chip-stepper button {
+  width: 26px; height: 26px; border: none; background: none; cursor: pointer;
+  font-size: 16px; font-weight: 700; color: #1a1a1a; border-radius: 8px;
+}
+.code-chip-stepper button:disabled { opacity: 0.3; cursor: default; }
+.code-chip-qty { font-size: 13px; font-weight: 800; min-width: 22px; text-align: center; }
+.code-chip-selected-label { font-size: 12px; color: #6b7280; font-weight: 600; }
+.code-chip-remove { border: none; background: none; color: #dc2626; font-size: 12px; font-weight: 700; cursor: pointer; padding: 4px 6px; border-radius: 6px; }
+.code-chip-add {
+  width: 100%; margin-top: 8px; height: 32px; border: none; border-radius: 8px;
+  background: #000; color: #FF8200; font-weight: 800; font-size: 11px;
+  text-transform: uppercase; letter-spacing: 0.06em; cursor: pointer;
+}
+.code-chip-add:disabled { opacity: 0.4; cursor: default; }
+
 /* ── Print ── */
 @media print {
   body { background: #fff !important; color: #000 !important; }

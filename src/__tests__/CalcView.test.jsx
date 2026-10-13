@@ -97,7 +97,8 @@ describe('CalcView', () => {
 
   it('shows $0.00 when no codes selected', () => {
     render(<CalcView user={mockUser} />);
-    expect(screen.getByText('$0.00')).toBeInTheDocument();
+    // Total appears in exactly two places: the header banner and the result card
+    expect(screen.getAllByText('$0.00')).toHaveLength(2);
   });
 
   it('shows billing rules when payer with rules is selected', () => {
