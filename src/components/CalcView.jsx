@@ -8,6 +8,7 @@ import EightMinuteRule from './EightMinuteRule';
 import BillingAlerts from './BillingAlerts';
 import PdfExport from './PdfExport';
 import CodeChip from './calc/CodeChip';
+import PayerCheatSheet from './PayerCheatSheet';
 import { getOptimizationSuggestions } from '../utils/billingOptimizer';
 import { getMissingCodeSuggestions } from '../utils/codeSuggestions';
 import {
@@ -272,6 +273,11 @@ export default function CalcView({ user, templateCodes, selectedPatient, onClear
           <div className="calc-header-total-amt">{fmtUSD(total)}</div>
         </div>
       </div>
+
+      {/* Per-payer cheat sheet — auto-appears to the right when a payer is picked */}
+      {mode === 'fee' && payer && (
+        <PayerCheatSheet payer={payer} rates={RATES} billingRules={BILLING_RULES[payer] || []} />
+      )}
 
       {/* Getting started guide — show only when nothing selected */}
       {!payer && codeCount === 0 && mode === 'fee' && (

@@ -27,7 +27,9 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
-          node-version: 22
+          # node 24 matches the committed package-lock.json (npm 11). node 22's
+          # npm 10 re-resolves the vitest/esbuild subtree and fails `npm ci`.
+          node-version: 24
           cache: npm
 
       - name: Install dependencies
