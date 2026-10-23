@@ -8,6 +8,7 @@ import { validatePassword } from './utils/validation';
 import LoginScreen from './components/LoginScreen';
 import AdminShell from './components/AdminShell';
 import UserShell from './components/UserShell';
+import RetirementBanner from './components/RetirementBanner';
 
 // Start tracking uncaught errors to activity log
 initErrorTracking();
@@ -209,14 +210,16 @@ export default function App() {
     setResetPassword({ show: false, newPw: '', confirmPw: '', user: null });
   };
 
+  const bannerOffset = 'var(--retirement-banner-height, 0px)';
+
   const offlineBanner = isOffline ? (
-    <div style={{ position: 'sticky', top: 0, zIndex: 999, background: '#fbbf24', color: '#78480f', padding: 8, textAlign: 'center', fontSize: 13, fontWeight: 700 }}>
+    <div style={{ position: 'sticky', top: bannerOffset, zIndex: 999, background: '#fbbf24', color: '#78480f', padding: 8, textAlign: 'center', fontSize: 13, fontWeight: 700 }}>
       You're offline — showing cached data
     </div>
   ) : null;
 
   const timeoutBanner = showTimeoutWarning ? (
-    <div style={{ position: 'sticky', top: 0, zIndex: 999, background: '#fbbf24', color: '#78480f', padding: '10px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13, fontWeight: 700 }}>
+    <div style={{ position: 'sticky', top: bannerOffset, zIndex: 999, background: '#fbbf24', color: '#78480f', padding: '10px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13, fontWeight: 700 }}>
       <span>You'll be signed out in 2 minutes due to inactivity</span>
       <button
         onClick={() => { setShowTimeoutWarning(false); window.dispatchEvent(new Event('mousedown')); }}
@@ -227,24 +230,20 @@ export default function App() {
     </div>
   ) : null;
 
-  if (!ready) {
-    return (
-      <>
-        {offlineBanner}
-        <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 16, background: '#f5f5f5' }}>
-          <div style={{ width: 40, height: 40, border: '3px solid #eee', borderTopColor: '#FF8200', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
-          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-          <div style={{ color: '#9ca3af', fontSize: 14 }}>Loading…</div>
-        </div>
-      </>
-    );
-  }
+  const screenHeight = `calc(100vh - ${bannerOffset})`;
 
-  if (resetPassword.show) {
-    return (
-      <>
-        {offlineBanner}
-        <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f5f5f5' }}>
+  let screen;
+  if (!ready) {
+    screen = (
+      <div style={{ minHeight: screenHeight, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 16, background: '#f5f5f5' }}>
+        <div style={{ width: 40, height: 40, border: '3px solid #eee', borderTopColor: '#FF8200', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+        <div style={{ color: '#9ca3af', fontSize: 14 }}>Loading…</div>
+      </div>
+    );
+  } else if (resetPassword.show) {
+    screen = (
+        <div style={{ minHeight: screenHeight, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f5f5f5' }}>
           <div className="card" style={{ maxWidth: 400, width: '100%', margin: 16, borderColor: '#FF8200', borderWidth: 2 }}>
             <div style={{ fontSize: 20, fontWeight: 700, color: '#FF8200', marginBottom: 8 }}>Set New Password</div>
             <div style={{ fontSize: 14, color: '#6b7280', marginBottom: 16 }}>
@@ -268,28 +267,28 @@ export default function App() {
             </button>
           </div>
         </div>
-      </>
     );
-  }
-
-  if (!currentUser) {
-    return (
-      <>
-        {offlineBanner}
-        <LoginScreen
-          form={loginForm}
-          setForm={setLoginForm}
-          onLogin={login}
-          err={loginErr}
-        />
-      </>
+  } else if (!currentUser) {
+    screen = (
+      <LoginScreen
+        form={loginForm}
+        setForm={setLoginForm}
+        onLogin={login}
+        err={loginErr}
+      />
     );
+  } else if (currentUser.role === 'superadmin' || currentUser.role === 'admin') {
+    screen = <AdminShell user={currentUser} onLogout={logout} />;
+  } else {
+    screen = <UserShell user={currentUser} onLogout={logout} />;
   }
 
-  // Admin role: superadmin OR users with role 'admin'
-  if (currentUser.role === 'superadmin' || currentUser.role === 'admin') {
-    return <>{offlineBanner}{timeoutBanner}<AdminShell user={currentUser} onLogout={logout} /></>;
-  }
-
-  return <>{offlineBanner}{timeoutBanner}<UserShell user={currentUser} onLogout={logout} /></>;
+  return (
+    <>
+      <RetirementBanner />
+      {offlineBanner}
+      {currentUser ? timeoutBanner : null}
+      {screen}
+    </>
+  );
 }
