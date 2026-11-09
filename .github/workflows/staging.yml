@@ -45,6 +45,14 @@ jobs:
           VITE_SUPER_ADMIN_PASSWORD: ${{ secrets.VITE_SUPER_ADMIN_PASSWORD }}
           VITE_DEFAULT_USER_PASSWORD: ${{ secrets.VITE_DEFAULT_USER_PASSWORD }}
 
+      # Same artifact as production: the move notice, not the Vite bundle.
+      # The summary below used to read dist/assets, which this site no longer emits.
+      - name: Publish retirement redirect
+        run: node scripts/publish-redirect.mjs
+
+      - name: Confirm staging artifact is the redirect
+        run: node scripts/verify-redirect-dist.mjs
+
       - name: Upload staging artifact
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
@@ -58,11 +66,27 @@ jobs:
         with:
           script: |
             const fs = require('fs');
-            const distFiles = fs.readdirSync('dist/assets').filter(f => f.endsWith('.js') || f.endsWith('.css'));
-            const sizes = distFiles.map(f => {
-              const stats = fs.statSync(`dist/assets/${f}`);
-              return `| ${f} | ${(stats.size / 1024).toFixed(1)} KB |`;
-            }).join('\n');
+            const path = require('path');
+
+            function listFiles(dir, prefix = '') {
+              return fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+                const rel = prefix ? `${prefix}/${entry.name}` : entry.name;
+                const full = path.join(dir, entry.name);
+                if (entry.isDirectory()) return listFiles(full, rel);
+                const stats = fs.statSync(full);
+                return [`| ${rel} | ${(stats.size / 1024).toFixed(1)} KB |`];
+              });
+            }
+
+            const index = fs.readFileSync('dist/index.html', 'utf8');
+            const dest = 'https://tristar-reimbursement.vercel.app';
+            const isRedirect = index.includes(`content="5; url=${dest}"`)
+              && !/<script\b/i.test(index)
+              && !fs.existsSync('dist/assets');
+            if (!isRedirect) {
+              core.setFailed('Staging dist is not the rcalc retirement redirect.');
+              return;
+            }
 
             const body = [
               '## Staging Build Summary',
@@ -71,12 +95,14 @@ jobs:
               '|--------|--------|',
               '| Lint | Passed |',
               '| Tests | Passed |',
-              '| Build | Passed |',
+              '| Build | Retirement redirect |',
               '',
-              '### Bundle Sizes',
+              `The artifact redirects to ${dest} after 5 seconds. The calculator bundle is not included.`,
+              '',
+              '### Artifact files',
               '| File | Size |',
               '|------|------|',
-              sizes,
+              listFiles('dist').join('\n'),
               '',
               'Staging artifact available for download from this workflow run.',
             ].join('\n');
