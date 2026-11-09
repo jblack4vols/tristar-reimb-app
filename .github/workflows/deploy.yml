@@ -53,6 +53,16 @@ jobs:
           VITE_SUPER_ADMIN_PASSWORD: ${{ secrets.VITE_SUPER_ADMIN_PASSWORD }}
           VITE_DEFAULT_USER_PASSWORD: ${{ secrets.VITE_DEFAULT_USER_PASSWORD }}
 
+      # dist/ is the Pages site. Vite's root index.html would mount the
+      # calculator there, so publish the move notice again after the build
+      # and refuse to upload anything else. public/CNAME is copied unchanged.
+      # This step does not read the secrets above.
+      - name: Publish retirement redirect
+        run: node scripts/publish-redirect.mjs
+
+      - name: Confirm Pages artifact is the redirect
+        run: node scripts/verify-redirect-dist.mjs
+
       - name: Setup Pages
         uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5
 
